@@ -1,6 +1,6 @@
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Date;
 import java.util.Random;
 
 import javax.swing.ImageIcon;
@@ -11,15 +11,17 @@ import javax.swing.Timer;
 
 public class Main extends JFrame implements ActionListener {
 	private Timer timer;
-	private Car[] car, carX;
+	private Car[] carY, carX;
 	private double[] speed, speedX;
 	private Random rd;
 	private ImageIcon backgroundImage;
 	private JLabel backgroundLabel;
 	private JButton trafficLightButton;
 	private final int amountOfCarsY, amountOfCarsX, topCrossing, bottomCrossing, leftCrossing, rightCrossing;
-	private boolean greenX, greenY;
+	private boolean greenX, greenY, buttonPressed;
 	private double passRedLightSpeed, timerDelay;
+	private Date seconds;
+	private long secondsBackup;
 	
 	public Main() {
 		setSize(800, 600);
@@ -31,6 +33,7 @@ public class Main extends JFrame implements ActionListener {
 		backgroundLabel.setBounds(0, 0, 800, 600);
 		add(backgroundLabel);
 		rd = new Random();
+		seconds = new Date();
 		
 		// The coordinates of road intersection
 		topCrossing = 63;
@@ -54,35 +57,25 @@ public class Main extends JFrame implements ActionListener {
 		amountOfCarsY = 10;
 		amountOfCarsX = 12;
 		
-		speed = new double[amountOfCarsY];
-		speedX = new double[amountOfCarsX];
+		carY = new Car[amountOfCarsY];
+		carX = new Car[amountOfCarsX];
 		
-		// Assigns random speed to cars.
-		for (int i = 0; i < amountOfCarsY; i++) 
-			speed[i] = (rd.nextDouble() + 1);
-		
-		for (int i = 0; i < 10; i++)
-			speedX[i] = (0.4);
-		
-		car = new Car[amountOfCarsY];
-		
-		// Sets starting positions for cars on the 'Y' axis.
+		// Sets starting settings for cars on the 'Y' axis.
 		for (int i = 0; i < amountOfCarsY; i++) {
-			car[i] = new Car();
-			car[i].setOpaque(false);
-			car[i].setRandomColor();
+			carY[i] = new Car();
+			carY[i].setOpaque(false);
+			carY[i].setRandomColor();
 			
 			// The first half of amount of cars is placed on the left line, the second half is placed on the right line.
 			if (i < amountOfCarsY/2)
-				car[i].setCarPosition(400, 600 - 100*i, 90);
+				carY[i].setCarPosition(400, 600 - 100*i, 90);
 			else
-				car[i].setCarPosition(500, 100*i +car[i].getCarWidth(), 270);
+				carY[i].setCarPosition(500, 100*i +carY[i].getCarWidth(), 270);
 			
-			backgroundLabel.add(car[i]);		
+			backgroundLabel.add(carY[i]);		
 		}
 		
-		carX = new Car[amountOfCarsX];
-		
+		// Sets starting settings for cars on the 'X' axis.
 		for (int i = 0; i < amountOfCarsX; i++) {
 			carX[i] = new Car();
 			carX[i].setOpaque(false);
@@ -95,6 +88,12 @@ public class Main extends JFrame implements ActionListener {
 			backgroundLabel.add(carX[i]);
 		}
 		
+		// Assigns speed values to cars.
+		for (int i = 0; i < amountOfCarsY; i++) 
+			carY[i].setSpeed(rd.nextDouble() + 1);
+				
+		for (int i = 0; i < 10; i++)
+			carX[i].setSpeed(0.4);
 		
 		timer = new Timer(10, this);
 		timer.addActionListener(this);
@@ -105,6 +104,7 @@ public class Main extends JFrame implements ActionListener {
 		Main app = new Main();
 		app.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		app.setVisible(true);
+		System.out.println();
 	}
 
 	@Override
@@ -113,12 +113,11 @@ public class Main extends JFrame implements ActionListener {
 		
 		// The following code is performed every 10 milliseconds.
 		if (z == timer) {
-			
 			for (int i = 0; i < amountOfCarsY; i++) 
-				car[i].moveByAmount(speed[i]);
+				carY[i].moveBySpeed();
 			
 			for (int i = 0; i < amountOfCarsX; i++)
-				carX[i].moveByAmount(speedX[i]);
+				carX[i].moveBySpeed();
 			
 			
 			/* BEGINNING OF SETTINGS FOR CARS ON THE LEFT LINE OF 'Y' AXIS */
@@ -127,48 +126,42 @@ public class Main extends JFrame implements ActionListener {
 				
 				// Moves cars to their respawn area and gives them a new color and random speed after they leave the map.
 				// The requirement is that the frontal car has to be on the map so that there's space in the respawn area. 
-				if (car[i].getCarY() > 600 && car[i-1].getCarY() > 0 && car[i-1].getCarY() < 600) {
-					car[i].setCarPosition(400, -100, 90);
-					speed[i] = rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2);
-					car[i].setRandomColor();
+				if (carY[i].getCarY() > 600 && carY[i-1].getCarY() > 0 && carY[i-1].getCarY() < 600) {
+					carY[i].setCarPosition(400, -100, 90);
+					carY[i].setSpeed(rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2));
+					carY[i].setRandomColor();
 				}
 				
 				// Slows car down if it gets too close to another car at a specified distance.
-				if (car[i].isCloseY(car[i-1], 100 + speed[i] * 10)) {
-					if (speed[i] > speed[i-1] && speed[i-1] != 0)
-						speed[i] = Math.abs(speed[i] - 0.03);
-					if (speed[i-1] == 0)
-						speed[i] = 0;
+				if (carY[i].isCloseY(carY[i-1], 100 + carY[i].getSpeed() * 10)) {
+					carY[i].moveAsSlowlyAs(carY[i-1]);
 				}
 				
 				// Accelerates the car if there's no car ahead of it and the light is green.
 				// If the speed is too high (i.e. the car won't stop before crossing the intersection)
 				// or the car has already crossed the intersection, it also accelerates.
-				else if (speed[i] > passRedLightSpeed || greenY == true || car[i].getCarFrontY() > topCrossing)
-					speed[i] = speed[i] + 0.007;
+				else if (carY[i].getSpeed() > passRedLightSpeed || (greenY == true && trafficLightButton.isEnabled() == true) || carY[i].getCarFrontY() > topCrossing)
+						carY[i].accelerateBy(0.007);
 				
 			}
 			
 			
 			// Exception - the first car in line (no. [0]) on the left line of Y axis
 			// follows (after being respawned) last car in line (default no. [4]), thus it requires different conditionals.
-			if (car[0].getCarY() > 600 && car[amountOfCarsY/2 - 1].getCarY() > 0 && car[amountOfCarsY/2 - 1].getCarY() < 600) {
-				car[0].setCarPosition(400, -100, 90);
-				speed[0] = rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2);
-				car[0].setRandomColor();
+			if (carY[0].getCarY() > 600 && carY[amountOfCarsY/2 - 1].getCarY() > 0 && carY[amountOfCarsY/2 - 1].getCarY() < 600) {
+				carY[0].setCarPosition(400, -100, 90);
+				carY[0].setSpeed(rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2));
+				carY[0].setRandomColor();
 			}
 			
 			// Slows the first car if it gets too close to the last car at a specified distance.
-			if (car[0].isCloseY(car[amountOfCarsY/2 - 1], 100 + speed[0] * 10)) {
-				if (speed[0] > speed[amountOfCarsY/2 - 1])
-					speed[0] = Math.abs(speed[amountOfCarsY/2 - 1] - 0.03);
-				if (speed[0] == 0)
-					speed[0] = 0;
+			if (carY[0].isCloseY(carY[amountOfCarsY/2 - 1], 100 + carY[0].getSpeed() * 10)) {
+				carY[0].moveAsSlowlyAs(carY[amountOfCarsY/2 - 1]);
 			}
 			
 			// In order to bring variety to the roads, the first car accelerates only untill it reaches a certain speed.
-			else if (speed[0] < 0.7 && (greenY == true || car[0].getCarFrontY() > topCrossing))
-				speed[0] = speed[0] + 0.007;
+			else if (carY[0].getSpeed() < 0.7 && ( (greenY == true && trafficLightButton.isEnabled() == true) || carY[0].getCarFrontY() > topCrossing))
+				carY[0].accelerateBy(0.007);
 			
 			/* END OF SETTINGS FOR CARS ON THE LEFT LINE OF 'Y' AXIS */
 				
@@ -181,47 +174,41 @@ public class Main extends JFrame implements ActionListener {
 				
 				// Moves cars to their respawn area and gives them a new color and random speed after they leave the map.
 				// The requirement is that the frontal car has to be on the map so that there's space in the respawn area.
-				if (car[i].getCarY() < 0 && car[i-1].getCarY() > 0 && car[i-1].getCarY() < 600) {
-					car[i].setCarPosition(500, 750, 270);
-					speed[i] = rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2);
-					car[i].setRandomColor();
+				if (carY[i].getCarY() < 0 && carY[i-1].getCarY() > 0 && carY[i-1].getCarY() < 600) {
+					carY[i].setCarPosition(500, 750, 270);
+					carY[i].setSpeed(rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2));
+					carY[i].setRandomColor();
 				}
 				
 				// Slows car down if it gets too close to another car at a specified distance.
-				if (car[i].isCloseY(car[i-1], 100 + speed[i] * 10)) {
-					if (speed[i] > speed[i-1])
-						speed[i] = Math.abs(speed[i] - 0.03);
-					if (speed[i-1] == 0)
-						speed[i] = 0;
+				if (carY[i].isCloseY(carY[i-1], 100 + carY[i].getSpeed() * 10)) {
+					carY[i].moveAsSlowlyAs(carY[i-1]);
 				}
 				
 				// Accelerates the car if there's no car ahead of it and the light is green.
 				// If the speed is too high (i.e. the car won't stop before crossing the intersection)
 				// or the car has already crossed the intersection, it also accelerates.
-				else if (speed[i] > passRedLightSpeed || greenY == true || car[i].getCarFrontY() < bottomCrossing)
-					speed[i] = speed[i] + 0.007;
+				else if (carY[i].getSpeed() > passRedLightSpeed || (greenY == true && trafficLightButton.isEnabled() == true) || carY[i].getCarFrontY() < bottomCrossing)
+					carY[i].accelerateBy(0.007);
 			}
 
 			
 			// Exception - the first car in line (default no. [5]) on the right line of Y axis
 			// follows (after being respawned) last car in line (default no. [9]), thus it requires different conditionals.
-			if (car[amountOfCarsY/2].getCarY() < 0 && car[amountOfCarsY - 1].getCarY() > 0 && car[amountOfCarsY - 1].getCarY() < 600) {
-				car[amountOfCarsY/2].setCarPosition(500, 750, 270);
-				speed[amountOfCarsY/2] = rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2);
-				car[amountOfCarsY/2].setRandomColor();
+			if (carY[amountOfCarsY/2].getCarY() < 0 && carY[amountOfCarsY-1].getCarY() > 0 && carY[amountOfCarsY-1].getCarY() < 600) {
+				carY[amountOfCarsY/2].setCarPosition(500, 750, 270);
+				carY[amountOfCarsY/2].setSpeed(rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2));
+				carY[amountOfCarsY/2].setRandomColor();
 			}
 			
 			// Slows the first car down if it gets too close to the last car at a specified distance.
-			if (car[amountOfCarsY/2].isCloseY(car[amountOfCarsY-1], 100 + speed[amountOfCarsY/2] * 10)) {
-				if (speed[amountOfCarsY/2] > speed[amountOfCarsY-1])
-					speed[amountOfCarsY/2] = Math.abs(speed[amountOfCarsY/2] - 0.03);
-				if (speed[amountOfCarsY-1] == 0)
-					speed[amountOfCarsY/2] = 0;
+			if (carY[amountOfCarsY/2].isCloseY(carY[amountOfCarsY-1], 100 + carY[amountOfCarsY/2].getSpeed() * 10)) {
+				carY[amountOfCarsY/2].moveAsSlowlyAs(carY[amountOfCarsY-1]);
 			}
 			
 			// In order to bring variety to the roads, the first car accelerates only untill it reaches a certain speed.
-			else if (speed[amountOfCarsY/2] < 0.7 && (greenY == true || car[amountOfCarsY/2].getCarFrontY() < bottomCrossing))
-				speed[amountOfCarsY/2] = speed[amountOfCarsY/2] + 0.007;
+			else if (carY[amountOfCarsY/2].getSpeed() < 0.7 && ( (greenY == true && trafficLightButton.isEnabled() == true) || carY[amountOfCarsY/2].getCarFrontY() < bottomCrossing))
+				carY[amountOfCarsY/2].accelerateBy(0.007);
 			
 			/* END OF SETTINGS FOR CARS ON THE RIGHT LINE OF 'Y' AXIS */
 			
@@ -234,23 +221,20 @@ public class Main extends JFrame implements ActionListener {
 				// The requirement is that the frontal car has to be on the map so that there's space in the respawn area. 
 				if (carX[i].getCarX() < 0 && carX[i-1].getCarX() > 0 && carX[i-1].getCarX() < 800) {
 					carX[i].setCarPosition(1000, 95, 180);
-					speedX[i] = rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2);
+					carX[i].setSpeed(rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2));
 					carX[i].setRandomColor();
 				}
 				
 				// Slows car down if it gets too close to another car at a specified distance.
-				if (carX[i].isCloseX(carX[i-1], 100 + speedX[i] * 10)) {
-					if (speedX[i] > speedX[i-1] && speedX[i-1] != 0)
-						speedX[i] = Math.abs(speedX[i] - 0.03);
-					if (speedX[i-1] == 0)
-						speedX[i] = 0;
+				if (carX[i].isCloseX(carX[i-1], 100 + carX[i].getSpeed() * 10)) {
+					carX[i].moveAsSlowlyAs(carX[i-1]);
 				}
 				
 				// Accelerates the car if there's no car ahead of it and the light is green.
 				// If the speed is too high (i.e. the car won't stop before crossing the intersection)
 				// or the car has already crossed the intersection, it also accelerates.
-				else if (speedX[i] > passRedLightSpeed || greenX == true || carX[i].getCarFrontX() < rightCrossing)
-					speedX[i] = speedX[i] + 0.007;
+				else if (carX[i].getSpeed() > passRedLightSpeed || (greenX == true && trafficLightButton.isEnabled() == true) || carX[i].getCarFrontX() < rightCrossing)
+					carX[i].accelerateBy(0.007);
 				
 			}
 			
@@ -259,21 +243,18 @@ public class Main extends JFrame implements ActionListener {
 			// follows (after being respawned) last car in line (default no. [4]), thus it requires different conditionals.
 			if (carX[0].getCarX() < 0 && carX[amountOfCarsX/2 - 1].getCarX() > 0 && carX[amountOfCarsX/2 - 1].getCarX() < 800) {
 				carX[0].setCarPosition(1000, 95, 180);
-				speedX[0] = rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2);
+				carX[0].setSpeed(rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2));
 				carX[0].setRandomColor();
 			}
 			
 			// Slows the first car if it gets too close to the last car at a specified distance.
-			if (carX[0].isCloseX(carX[amountOfCarsX/2 - 1], 100 + speedX[0] * 10)) {
-				if (speedX[0] > speedX[amountOfCarsX/2 - 1])
-					speedX[0] = Math.abs(speedX[amountOfCarsX/2 - 1] - 0.03);
-				if (speedX[0] == 0)
-					speedX[0] = 0;
+			if (carX[0].isCloseX(carX[amountOfCarsX/2 - 1], 100 + carX[0].getSpeed() * 10)) {
+				carX[0].moveAsSlowlyAs(carX[amountOfCarsX/2 - 1]);
 			}
 			
 			// In order to bring variety to the roads, the first car accelerates only untill it reaches a certain speed.
-			else if (speedX[0] < 0.7 && (greenX == true || carX[0].getCarFrontX() < rightCrossing))
-				speedX[0] = speedX[0] + 0.007;
+			else if (carX[0].getSpeed() < 0.7 && ( (greenX == true && trafficLightButton.isEnabled() == true) || carX[0].getCarFrontX() < rightCrossing))
+				carX[0].accelerateBy(0.007);
 			
 			/* END OF SETTINGS FOR CARS ON THE TOP LINE OF 'X' AXIS */
 			
@@ -286,23 +267,20 @@ public class Main extends JFrame implements ActionListener {
 				// The requirement is that the frontal car has to be on the map so that there's space in the respawn area.
 				if (carX[i].getCarX() > 800 && carX[i-1].getCarX() > 0 && carX[i-1].getCarX() < 800) {
 					carX[i].setCarPosition(-150, 195, 0);
-					speedX[i] = rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2);
+					carX[i].setSpeed(rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2));
 					carX[i].setRandomColor();
 				}
 				
 				// Slows car down if it gets too close to another car at a specified distance.
-				if (carX[i].isCloseX(carX[i-1], 100 + speedX[i] * 10)) {
-					if (speedX[i] > speedX[i-1])
-						speedX[i] = Math.abs(speedX[i] - 0.03);
-					if (speedX[i-1] == 0)
-						speedX[i] = 0;
+				if (carX[i].isCloseX(carX[i-1], 100 + carX[i].getSpeed() * 10)) {
+					carX[i].moveAsSlowlyAs(carX[i-1]);
 				}
 				
 				// Accelerates the car if there's no car ahead of it and the light is green.
 				// If the speed is too high (i.e. the car won't stop before crossing the intersection)
 				// or the car has already crossed the intersection, it also accelerates.
-				else if (speedX[i] > passRedLightSpeed || greenX == true || carX[i].getCarFrontX() > leftCrossing)
-					speedX[i] = speedX[i] + 0.007;
+				else if (carX[i].getSpeed() > passRedLightSpeed || (greenX == true && trafficLightButton.isEnabled() == true) || carX[i].getCarFrontX() > leftCrossing)
+					carX[i].accelerateBy(0.007);
 			}
 
 			
@@ -310,21 +288,18 @@ public class Main extends JFrame implements ActionListener {
 			// follows (after being respawned) last car in line (default no. [9]), thus it requires different conditionals.
 			if (carX[amountOfCarsX/2].getCarX() > 800 && carX[amountOfCarsY - 1].getCarX() > 0 && carX[amountOfCarsX - 1].getCarX() < 800) {
 				carX[amountOfCarsX/2].setCarPosition(-150, 195, 0);
-				speedX[amountOfCarsX/2] = rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2);
+				carX[amountOfCarsX/2].setSpeed(rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2));
 				carX[amountOfCarsX/2].setRandomColor();
 			}
 			
 			// Slows the first car down if it gets too close to the last car at a specified distance.
-			if (carX[amountOfCarsX/2].isCloseX(carX[amountOfCarsX-1], 100 + speedX[amountOfCarsX/2] * 10)) {
-				if (speedX[amountOfCarsX/2] > speedX[amountOfCarsX-1])
-					speedX[amountOfCarsX/2] = Math.abs(speedX[amountOfCarsX/2] - 0.03);
-				if (speedX[amountOfCarsX-1] == 0)
-					speedX[amountOfCarsX/2] = 0;
+			if (carX[amountOfCarsX/2].isCloseX(carX[amountOfCarsX-1], 100 + carX[amountOfCarsX/2].getSpeed() * 10)) {
+				carX[amountOfCarsX/2].moveAsSlowlyAs(carX[amountOfCarsX-1]);
 			}
 			
 			// In order to bring variety to the roads, the first car accelerates only untill it reaches a certain speed.
-			else if (speedX[amountOfCarsX/2] < 0.7 && (greenX == true || carX[amountOfCarsX/2].getCarFrontX() > leftCrossing))
-				speedX[amountOfCarsX/2] = speedX[amountOfCarsX/2] + 0.007;
+			else if (carX[amountOfCarsX/2].getSpeed() < 0.7 && ( (greenX == true && trafficLightButton.isEnabled() == true) || carX[amountOfCarsX/2].getCarFrontX() > leftCrossing))
+				carX[amountOfCarsX/2].accelerateBy(0.007);
 			
 			/* END OF SETTINGS FOR CARS ON THE BOTTOM LINE OF 'X' AXIS */
 			
@@ -334,32 +309,40 @@ public class Main extends JFrame implements ActionListener {
 			// in the constructor) which makes it impossible to gradually stop the car before the intersection,
 			// the car is allowed to go.
 			// 2) If the car has already entered the intersection, it is allowed to go.
-			if (greenY == false) {
+			
+			if (trafficLightButton.isEnabled() != true)
+				seconds = new Date();
+			
+			if (seconds.getTime() - secondsBackup >= 6000) {
+				trafficLightButton.setEnabled(true);
+			}
+			
+			if (greenY == false && seconds.getTime() - secondsBackup >= 500) {
 				for (int i = 0; i < amountOfCarsY/2; i++) {
-					if (car[i].getCarFrontY() < topCrossing && speed[i] > 0.3 && (speed[i] < passRedLightSpeed || Math.abs(topCrossing - car[i].getCarY()) > 100))
-						speed[i] = Math.abs(speed[i] - 0.01);
-					else if (car[i].getCarFrontY() < topCrossing && car[i].getCarFrontY() >= topCrossing - 5 && speed[i] <= 0.3)
-						speed[i] = 0;
+					if (carY[i].getCarFrontY() < topCrossing && carY[i].getSpeed() > 0.3 && (carY[i].getSpeed() < passRedLightSpeed || Math.abs(topCrossing - carY[i].getCarY()) > 100))
+						carY[i].accelerateBy(-0.01);
+					else if (carY[i].getCarFrontY() < topCrossing && carY[i].getCarFrontY() >= topCrossing - 5 && carY[i].getSpeed() <= 0.3)
+						carY[i].setSpeed(0);
 				}
 				for (int i = amountOfCarsY/2; i < amountOfCarsY ; i++) {
-					if (car[i].getCarFrontY() > bottomCrossing + 5 && speed[i] > 0.3 && (speed[i] < passRedLightSpeed || bottomCrossing - car[i].getCarY() > 100))
-						speed[i] = Math.abs(speed[i] - 0.01);
-					else if (car[i].getCarFrontY() > bottomCrossing && car[i].getCarFrontY() <= bottomCrossing + 5 && speed[i] <= 0.3)
-						speed[i] = 0;
+					if (carY[i].getCarFrontY() > bottomCrossing + 5 && carY[i].getSpeed() > 0.3 && (carY[i].getSpeed() < passRedLightSpeed || bottomCrossing - carY[i].getCarY() > 100))
+						carY[i].accelerateBy(-0.01);
+					else if (carY[i].getCarFrontY() > bottomCrossing && carY[i].getCarFrontY() <= bottomCrossing + 5 && carY[i].getSpeed() <= 0.3)
+						carY[i].setSpeed(0);
 				}
 			}
-			else if (greenX == false) {
+			else if (greenX == false && seconds.getTime() - secondsBackup >= 500) {
 				for (int i = 0; i < amountOfCarsX/2; i++) {
-					if (carX[i].getCarFrontX() > rightCrossing + 5 && speedX[i] > 0.3 && (speedX[i] < passRedLightSpeed || Math.abs(rightCrossing - carX[i].getCarX()) > 100))
-						speedX[i] = Math.abs(speedX[i] - 0.01);
-					else if (carX[i].getCarFrontX() > rightCrossing && carX[i].getCarFrontX() <= rightCrossing + 5 && speedX[i] <= 0.3)
-						speedX[i] = 0;
+					if (carX[i].getCarFrontX() > rightCrossing + 5 && carX[i].getSpeed() > 0.3 && (carX[i].getSpeed() < passRedLightSpeed || Math.abs(rightCrossing - carX[i].getCarX()) > 100))
+						carX[i].accelerateBy(-0.01);
+					else if (carX[i].getCarFrontX() > rightCrossing && carX[i].getCarFrontX() <= rightCrossing + 5 && carX[i].getSpeed() <= 0.3)
+						carX[i].setSpeed(0);
 				}
 				for (int i = amountOfCarsX/2; i < amountOfCarsX ; i++) {
-					if (carX[i].getCarFrontX() < leftCrossing && speedX[i] > 0.3 && (speedX[i] < passRedLightSpeed || leftCrossing - carX[i].getCarX() > 100))
-						speedX[i] = Math.abs(speedX[i] - 0.01);
-					else if (carX[i].getCarFrontX() < leftCrossing && carX[i].getCarFrontX() >= leftCrossing - 5 && speedX[i] <= 0.3)
-						speedX[i] = 0;
+					if (carX[i].getCarFrontX() < leftCrossing && carX[i].getSpeed() > 0.3 && (carX[i].getSpeed() < passRedLightSpeed || leftCrossing - carX[i].getCarX() > 100))
+						carX[i].accelerateBy(-0.01);
+					else if (carX[i].getCarFrontX() < leftCrossing && carX[i].getCarFrontX() >= leftCrossing - 5 && carX[i].getSpeed() <= 0.3)
+						carX[i].setSpeed(0);
 				}
 			}
 
@@ -367,7 +350,10 @@ public class Main extends JFrame implements ActionListener {
 		
 		
 		// The transition of traffic lights after the button is pressed.
-		if (z == trafficLightButton) {		
+		if (z == trafficLightButton) {	
+			 seconds = new Date();
+			 secondsBackup = seconds.getTime();
+			 trafficLightButton.setEnabled(false);
 			if (greenY == true) {
 				greenY = false;
 				greenX = true;

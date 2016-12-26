@@ -13,7 +13,7 @@ import javax.swing.JPanel;
 
 public class Car extends JPanel {
 	private int width, height, frameWidth;
-	private double angle, Xposition, Yposition;
+	private double angle, Xposition, Yposition, speed;
 	private Color carColor;
 	
 	public Car() {
@@ -22,6 +22,7 @@ public class Car extends JPanel {
 		height = 30;
 		carColor = Color.YELLOW;
 		frameWidth = ((int) Math.sqrt(Math.pow(width, 2) + Math.pow(height/2, 2)) + 1) * 2;
+		speed = 0.3;
 	}
 
 	public void paintComponent (Graphics g) {
@@ -58,6 +59,25 @@ public class Car extends JPanel {
 	
 	public double getAngle() {
 		return angle;
+	}
+	
+	public void setSpeed(double speed) {
+		this.speed = speed;
+	}
+	
+	public double getSpeed() {
+		return speed;
+	}
+	
+	public void moveAsSlowlyAs(Car car) {
+		if (this.speed > car.getSpeed() && car.getSpeed() != 0)
+			speed = Math.abs(car.getSpeed() - 0.03);
+		if (car.getSpeed() == 0)
+			this.speed = 0;
+	}
+	
+	public void accelerateBy(double a) {
+		speed = speed + a;
 	}
 	
 	// Returns true if the distance on 'Y' axis between the instance of this class
@@ -137,9 +157,9 @@ public class Car extends JPanel {
 	}
 	
 	// Moves the origin point of the car rectangle (not of the frame) by a specified amount of pixels.
-	public void moveByAmount(double delta) {
-		Xposition = Xposition + delta * Math.cos(Math.toRadians(angle));
-		Yposition = Yposition + delta * Math.sin(Math.toRadians(angle));
+	public void moveBySpeed() {
+		Xposition = Xposition + speed * Math.cos(Math.toRadians(angle));
+		Yposition = Yposition + speed * Math.sin(Math.toRadians(angle));
 		setBounds((int)Xposition-frameWidth/2, (int)Yposition-frameWidth/2, frameWidth, frameWidth);
 	}
 	
