@@ -80,6 +80,26 @@ public class Car extends JPanel {
 		speed = speed + a;
 	}
 	
+	public boolean isOnMap() {
+		if (this.getCarX() > 0 && this.getCarX() < 800 && this.getCarY() > 0 && this.getCarY() < 600)
+			return true;
+		else
+			return false;
+	}
+	
+	public boolean hasLeftMap() {
+		if ((this.angle == 0 || this.angle == 360) && this.getCarX() > 800)
+			return true;
+		else if (this.angle == 90 && this.getCarY() > 600)
+			return true;
+		else if (this.angle == 180 && this.getCarX() < 0)
+			return true;
+		else if (this.angle == 270 && this.getCarY() < 0)
+			return true;
+		else
+			return false;
+	}
+	
 	// Returns true if the distance on 'Y' axis between the instance of this class
 	// and the parameter car is smaller than value of the distance parameter. 
 	public boolean isCloseY(Car car, double distance) {
@@ -144,10 +164,12 @@ public class Car extends JPanel {
 	
 	public void rotateBy(double degree) {
 		angle = angle + degree;
+		if ((angle > 0 && angle < 0.45) || (angle > 90 && angle < 90.45) || (angle > 360 && angle < 360.45) || (angle > 180 && angle < 180.45) || (angle > 270 && angle < 270.45))
+			angle = (int) angle;
 		repaint();
 	}
 	
-	// Sets the position of the car rectangle (not of the frame) to a specified set of coordinates.
+	// Sets the angle and the position of the car rectangle (not of the frame) to a specified set of coordinates.
 	public void setCarPosition(int x, int y, int angle) {
 		setBounds(x-frameWidth/2, y-frameWidth/2, frameWidth, frameWidth);
 		this.angle = angle;
@@ -156,8 +178,8 @@ public class Car extends JPanel {
 		Yposition = y;
 	}
 	
-	// Moves the origin point of the car rectangle (not of the frame) by a specified amount of pixels.
-	public void moveBySpeed() {
+	// Moves the origin point of the car rectangle (not of the frame) by amount of pixels specified by the 'speed' variable.
+	public void moveAhead() {
 		Xposition = Xposition + speed * Math.cos(Math.toRadians(angle));
 		Yposition = Yposition + speed * Math.sin(Math.toRadians(angle));
 		setBounds((int)Xposition-frameWidth/2, (int)Yposition-frameWidth/2, frameWidth, frameWidth);
