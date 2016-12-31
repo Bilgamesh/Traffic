@@ -25,7 +25,7 @@ public class Car extends JPanel {
 		speed = 0.3;
 	}
 
-	public void paintComponent (Graphics g) {
+	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		Graphics2D g2d = (Graphics2D) g;
 		AffineTransform rotation = new AffineTransform();

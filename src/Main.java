@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Date;
@@ -21,6 +22,7 @@ public class Main extends JFrame implements ActionListener {
 	private double passRedLightSpeed;
 	private Date seconds;
 	private long secondsBackup;
+	private TrafficLight trafficLightObjectTop, trafficLightObjectBottom, trafficLightObjectLeft, trafficLightObjectRight;
 	
 	public Main() {
 		setSize(800, 600);
@@ -47,10 +49,39 @@ public class Main extends JFrame implements ActionListener {
 		greenX = false;
 		greenY = true;
 		
-		trafficLightButton = new JButton("Zmiana œwiate³");
+		trafficLightButton = new JButton("Switch lights");
 		trafficLightButton.setBounds(100, bottomCrossing, 200, 30);
 		trafficLightButton.addActionListener(this);
 		backgroundLabel.add(trafficLightButton);
+		
+		trafficLightObjectLeft = new TrafficLight();
+		trafficLightObjectLeft.setColor(Color.RED);
+		trafficLightObjectLeft.setBounds(leftCrossing-20, bottomCrossing-10, 20, 20);
+		trafficLightObjectLeft.setAngle(90);
+		trafficLightObjectLeft.setOpaque(false);
+		backgroundLabel.add(trafficLightObjectLeft);
+		
+		trafficLightObjectRight = new TrafficLight();
+		trafficLightObjectRight.setColor(Color.RED);
+		trafficLightObjectRight.setBounds(rightCrossing, topCrossing-10, 20, 20);
+		trafficLightObjectRight.setAngle(270);
+		trafficLightObjectRight.setOpaque(false);
+		backgroundLabel.add(trafficLightObjectRight);
+		
+		trafficLightObjectTop = new TrafficLight();
+		trafficLightObjectTop.setColor(Color.GREEN);
+		trafficLightObjectTop.setBounds(leftCrossing-10, topCrossing-20, 20, 20);
+		trafficLightObjectTop.setAngle(180);
+		trafficLightObjectTop.setOpaque(false);
+		backgroundLabel.add(trafficLightObjectTop);
+		
+		trafficLightObjectBottom = new TrafficLight();
+		trafficLightObjectBottom.setColor(Color.GREEN);
+		trafficLightObjectBottom.setBounds(rightCrossing-10, bottomCrossing, 20, 20);
+		trafficLightObjectBottom.setOpaque(false);
+		backgroundLabel.add(trafficLightObjectBottom);
+		
+		
 		
 		// Default number of cars. Must be even and must be equal or greater than 6.
 		amountOfCarsY = 10;
@@ -147,7 +178,7 @@ public class Main extends JFrame implements ActionListener {
 			// follows (after being respawned) last car in line (default no. [4]), thus it requires different conditionals.
 			// It respawns after leaving the map only if the last car (default no. [4]) has reappeared on the map
 			// or if all cars in this line have left the map.
-			if (((carY[0].hasLeftMap()) && carY[amountOfCarsY/2 - 1].isOnMap()) || haveAllCarsLeft(carY, 0, amountOfCarsY/2 - 1)) {
+			if ((carY[0].hasLeftMap() && carY[amountOfCarsY/2 - 1].isOnMap()) || haveAllCarsLeft(carY, 0, amountOfCarsY/2 - 1)) {
 				carY[0].setCarPosition(400, -100, 90);
 				carY[0].setSpeed(rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2));
 				carY[0].setRandomColor();
@@ -202,7 +233,7 @@ public class Main extends JFrame implements ActionListener {
 			// follows (after being respawned) last car in line (default no. [9]), thus it requires different conditionals.
 			// It respawns after leaving the map only if the last car (default no. [9]) has reappeared on the map
 			// or if all cars in this line have left the map.
-			if (((carY[amountOfCarsY/2].hasLeftMap()) && carY[amountOfCarsY-1].isOnMap()) || haveAllCarsLeft(carY, amountOfCarsY/2, amountOfCarsY-1)) {
+			if ((carY[amountOfCarsY/2].hasLeftMap() && carY[amountOfCarsY-1].isOnMap()) || haveAllCarsLeft(carY, amountOfCarsY/2, amountOfCarsY-1)) {
 				carY[amountOfCarsY/2].setCarPosition(500, 750, 270);
 				carY[amountOfCarsY/2].setSpeed(rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2));
 				carY[amountOfCarsY/2].setRandomColor();
@@ -347,19 +378,43 @@ public class Main extends JFrame implements ActionListener {
 				seconds = new Date();
 				if (greenX == true) {
 					greenX = false;
+					trafficLightObjectLeft.setColor(Color.YELLOW);
+					trafficLightObjectRight.setColor(Color.YELLOW);
 					futureGreenY = true;
 				}
 				if (greenY == true) {
 					greenY = false;
+					trafficLightObjectTop.setColor(Color.YELLOW);
+					trafficLightObjectBottom.setColor(Color.YELLOW);
 					futureGreenX = true;
+				}
+				if (futureGreenY == true && seconds.getTime() - secondsBackup > 2000) {
+					trafficLightObjectLeft.setColor(Color.RED);
+					trafficLightObjectRight.setColor(Color.RED);
+				}
+				if (futureGreenY == true && seconds.getTime() - secondsBackup > 4000) {
+					trafficLightObjectTop.setColor(Color.YELLOW);
+					trafficLightObjectBottom.setColor(Color.YELLOW);
 				}
 				if (futureGreenY == true && seconds.getTime() - secondsBackup > 6000) {
 					greenY = true;
+					trafficLightObjectTop.setColor(Color.GREEN);
+					trafficLightObjectBottom.setColor(Color.GREEN);
 					futureGreenY = false;
 					trafficLightButton.setEnabled(true);
 				}
+				if (futureGreenX == true && seconds.getTime() - secondsBackup > 2000) {
+					trafficLightObjectTop.setColor(Color.RED);
+					trafficLightObjectBottom.setColor(Color.RED);
+				}
+				if (futureGreenX == true && seconds.getTime() - secondsBackup > 4000) {
+					trafficLightObjectLeft.setColor(Color.YELLOW);
+					trafficLightObjectRight.setColor(Color.YELLOW);
+				}
 				if (futureGreenX == true && seconds.getTime() - secondsBackup > 6000) {
 					greenX = true;
+					trafficLightObjectLeft.setColor(Color.GREEN);
+					trafficLightObjectRight.setColor(Color.GREEN);
 					futureGreenX = false;
 					trafficLightButton.setEnabled(true);
 				}
