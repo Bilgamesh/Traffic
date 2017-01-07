@@ -8,9 +8,12 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JSlider;
 import javax.swing.Timer;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-public class TrafficGUI extends JFrame implements ActionListener {
+public class TrafficGUI extends JFrame implements ActionListener, ChangeListener {
 	private Timer timer;
 	private Car[] car;
 	private TrafficLight[] trafficLightObject;
@@ -18,12 +21,13 @@ public class TrafficGUI extends JFrame implements ActionListener {
 	private ImageIcon backgroundImage;
 	private JLabel backgroundLabel;
 	private JButton trafficLightButton, restartButton;
-	private int amountOfCars;
+	private int amountOfCars, newAmountOfCars;
 	private static int topCrossLine, bottomCrossLine, leftCrossLine, rightCrossLine;
 	private boolean greenX, greenY, futureGreenX, futureGreenY;
 	private double passRedLightSpeed;
 	private Date seconds;
 	private long secondsBackup;
+	private JSlider trafficSlider;
 	
 	public TrafficGUI() {
 		setSize(800, 600);
@@ -82,7 +86,16 @@ public class TrafficGUI extends JFrame implements ActionListener {
 
 		trafficLightObject[3].setBounds(rightCrossLine-10, bottomCrossLine, 20, 20);	// bottom
 		
-		amountOfCars = 24;		
+		trafficSlider = new JSlider(JSlider.HORIZONTAL, 12, 32, 24);
+		trafficSlider.setBounds(10, 500, 350, 30);
+		trafficSlider.setOpaque(false);
+		trafficSlider.setMajorTickSpacing(4);
+		trafficSlider.setSnapToTicks(true);
+		trafficSlider.addChangeListener(this);
+		backgroundLabel.add(trafficSlider);
+		
+		amountOfCars = 32;
+		newAmountOfCars = amountOfCars;
 		car = new Car[amountOfCars];		
 		for (int i = 0; i < amountOfCars; i++) {
 			car[i] = new Car();
@@ -102,12 +115,12 @@ public class TrafficGUI extends JFrame implements ActionListener {
 			car[i].setSpeed(rd.nextDouble() + 1);
 		}
 		for (int i = amountOfCars/2; i < amountOfCars * 3 / 4; i++) {				// horizontal top line
-			car[i].setCarPosition(i*(car[i].getCarWidth() + 30) - 550, 95, 180);
+			car[i].setCarPosition(rightCrossLine + 100 + (i-amountOfCars/2)*(car[i].getCarWidth()+20), 95, 180);
 			car[i].setRespawnPosition(1000, 95, 180);
 			car[i].setSpeed(0.4);
 		}
 		for (int i = amountOfCars * 3 / 4; i < amountOfCars; i++) {					// horizontal bottom line
-			car[i].setCarPosition(2050 - i*(car[i].getCarWidth() + 30), 195, 0);
+			car[i].setCarPosition(leftCrossLine - 100 - (i-amountOfCars*3/4)*(car[i].getCarWidth()+20), 195, 0);
 			car[i].setRespawnPosition(-150, 195, 0);
 			car[i].setSpeed(0.4);
 		}
@@ -159,12 +172,15 @@ public class TrafficGUI extends JFrame implements ActionListener {
 				if (car[i].isFollowing(car[frontCarNumber], 110)) {
 					car[i].moveAsSlowlyAs(car[frontCarNumber]);
 				}
-				if (!car[i].isFollowing(car[frontCarNumber], 110) && (car[i].getSpeed() > passRedLightSpeed || isLightGreenFor(car[i]) || car[i].hasCrossedLine()) && (!car[i].isGoingToTurn() || car[i].getSpeed() < 0.7)) {
-					car[i].accelerateBy(0.007);		
+				if ( (!car[i].isFollowing(car[frontCarNumber], 110))
+						&& ((car[i].getSpeed() > passRedLightSpeed) || (isLightGreenFor(car[i])) || (car[i].hasCrossedLine()))
+						&& ((!car[i].isGoingToTurn()) || (car[i].getSpeed() < 0.7)) ) {
+					car[i].accelerateBy(0.007);
 				}
 				
 				// stops cars when lights are changing
-				if ((!isLightGreenFor(car[i])) && (seconds.getTime() - secondsBackup >= 500) && (!car[i].hasCrossedLine()) && (car[i].getSpeed() < passRedLightSpeed)) {
+				if ( (!isLightGreenFor(car[i])) && (seconds.getTime() - secondsBackup >= 500) && (!car[i].hasCrossedLine())
+						&& (car[i].getSpeed() < passRedLightSpeed) ) {
 					car[i].stopNearCrossing();
 				}
 			}
@@ -304,9 +320,8 @@ public class TrafficGUI extends JFrame implements ActionListener {
 		for (int i = 0; i < amountOfCars; i++) {
 			car[i].setVisible(false);
 		}
-		repaint();
 		
-		amountOfCars = 12;
+		amountOfCars = newAmountOfCars;
 		
 		car = new Car[amountOfCars];		
 		for (int i = 0; i < amountOfCars; i++) {
@@ -327,12 +342,12 @@ public class TrafficGUI extends JFrame implements ActionListener {
 			car[i].setSpeed(rd.nextDouble() + 1);
 		}
 		for (int i = amountOfCars/2; i < amountOfCars * 3 / 4; i++) {				// horizontal top line
-			car[i].setCarPosition(i*(car[i].getCarWidth() + 30) - 550, 95, 180);
+			car[i].setCarPosition(rightCrossLine + 100 + (i-amountOfCars/2)*(car[i].getCarWidth()+20), 95, 180);
 			car[i].setRespawnPosition(1000, 95, 180);
 			car[i].setSpeed(0.4);
 		}
 		for (int i = amountOfCars * 3 / 4; i < amountOfCars; i++) {					// horizontal bottom line
-			car[i].setCarPosition(2050 - i*(car[i].getCarWidth() + 30), 195, 0);
+			car[i].setCarPosition(leftCrossLine - 100 - (i-amountOfCars*3/4)*(car[i].getCarWidth()+20), 195, 0);
 			car[i].setRespawnPosition(-150, 195, 0);
 			car[i].setSpeed(0.4);
 		}
@@ -343,6 +358,17 @@ public class TrafficGUI extends JFrame implements ActionListener {
 		car[amountOfCars*3/4].setTurnLine(leftCrossLine + 30);
 		
 		timer.restart();
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent e) {
+		Object z = e.getSource();
+		
+		if (z == trafficSlider) {
+			newAmountOfCars = trafficSlider.getValue();
+			reset();
+		}
+		
 	}
 	
 }

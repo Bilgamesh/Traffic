@@ -296,7 +296,6 @@ public class Car extends JPanel {
 	}
 	
 	public void setRandomColor() {
-		Random rd = new Random();
 		int number = rd.nextInt(10);
 		Color color;
 		switch (number) {
