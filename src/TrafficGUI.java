@@ -17,7 +17,7 @@ public class TrafficGUI extends JFrame implements ActionListener {
 	private Random rd;
 	private ImageIcon backgroundImage;
 	private JLabel backgroundLabel;
-	private JButton trafficLightButton;
+	private JButton trafficLightButton, restartButton;
 	private int amountOfCars;
 	private static int topCrossLine, bottomCrossLine, leftCrossLine, rightCrossLine;
 	private boolean greenX, greenY, futureGreenX, futureGreenY;
@@ -55,6 +55,11 @@ public class TrafficGUI extends JFrame implements ActionListener {
 		trafficLightButton.setBounds(100, bottomCrossLine, 200, 30);
 		trafficLightButton.addActionListener(this);
 		backgroundLabel.add(trafficLightButton);
+		
+		restartButton = new JButton("Restart");
+		restartButton.setBounds(100, bottomCrossLine+60, 200, 30);
+		restartButton.addActionListener(this);
+		backgroundLabel.add(restartButton);
 		
 		trafficLightObject = new TrafficLight[4];
 		for (int i = 0; i < 4; i++) {
@@ -108,9 +113,9 @@ public class TrafficGUI extends JFrame implements ActionListener {
 		}
 		
 		car[0].setTurnLine(topCrossLine + 27);
-		car[6].setTurnLine(bottomCrossLine - 30);
-		car[12].setTurnLine(rightCrossLine - 30);
-		car[18].setTurnLine(leftCrossLine + 30);
+		car[amountOfCars/4].setTurnLine(bottomCrossLine - 30);
+		car[amountOfCars/2].setTurnLine(rightCrossLine - 30);
+		car[amountOfCars*3/4].setTurnLine(leftCrossLine + 30);
 		
 		timer = new Timer(10, this);
 		timer.addActionListener(this);
@@ -168,7 +173,7 @@ public class TrafficGUI extends JFrame implements ActionListener {
 				if ((car[i].isAtTurningPosition()) && (car[i].getAngle() < car[i].getRespawnAngle() + 90) && (car[i].getSpeed() < 0.8)) {
 					car[i].rotateBy(car[i].getSpeed()/1.5);
 				}
-				if (haveAllCarsLeft(car, i, i+5)) {
+				if (haveAllCarsLeft(car, i, i+(amountOfCars/4 - 1))) {
 					car[i].respawn();
 					car[i].setRandomSpeed();
 					car[i].setRandomColor();
@@ -237,6 +242,10 @@ public class TrafficGUI extends JFrame implements ActionListener {
 			 trafficLightButton.setEnabled(false);
 		}
 		
+		if (z == restartButton) {
+			reset();
+		}
+		
 	}//end of ActionListener
 	
 	private int howManyCarsLeftMap(Car[] car, int firstCar, int lastCar) {
@@ -277,6 +286,63 @@ public class TrafficGUI extends JFrame implements ActionListener {
 			return greenY;
 		else
 			return true;
+	}
+	
+	public void reset() {
+		
+		greenX = false;
+		greenY = true;
+		futureGreenX = false;
+		futureGreenY = false;
+		
+		trafficLightButton.setEnabled(true);
+		trafficLightObject[0].setColor(Color.RED);		// left			
+		trafficLightObject[1].setColor(Color.RED);		// right
+		trafficLightObject[2].setColor(Color.GREEN);	// top
+		trafficLightObject[3].setColor(Color.GREEN);	// bottom
+		
+		for (int i = 0; i < amountOfCars; i++) {
+			car[i].setVisible(false);
+		}
+		repaint();
+		
+		amountOfCars = 12;
+		
+		car = new Car[amountOfCars];		
+		for (int i = 0; i < amountOfCars; i++) {
+			car[i] = new Car();
+			car[i].setOpaque(false);
+			car[i].setRandomColor();
+			backgroundLabel.add(car[i]);
+		}	
+				
+		for (int i = 0; i < amountOfCars/4; i++) {									// vertical left line
+			car[i].setCarPosition(400, 600 - 100 * i, 90);
+			car[i].setRespawnPosition(400, -100, 90);
+			car[i].setSpeed(rd.nextDouble() + 1);
+		}
+		for (int i = amountOfCars/4; i < amountOfCars/2; i++) {						// vertical right line
+			car[i].setCarPosition(500, 100*i, 270);
+			car[i].setRespawnPosition(500, 750, 270);
+			car[i].setSpeed(rd.nextDouble() + 1);
+		}
+		for (int i = amountOfCars/2; i < amountOfCars * 3 / 4; i++) {				// horizontal top line
+			car[i].setCarPosition(i*(car[i].getCarWidth() + 30) - 550, 95, 180);
+			car[i].setRespawnPosition(1000, 95, 180);
+			car[i].setSpeed(0.4);
+		}
+		for (int i = amountOfCars * 3 / 4; i < amountOfCars; i++) {					// horizontal bottom line
+			car[i].setCarPosition(2050 - i*(car[i].getCarWidth() + 30), 195, 0);
+			car[i].setRespawnPosition(-150, 195, 0);
+			car[i].setSpeed(0.4);
+		}
+				
+		car[0].setTurnLine(topCrossLine + 27);
+		car[amountOfCars/4].setTurnLine(bottomCrossLine - 30);
+		car[amountOfCars/2].setTurnLine(rightCrossLine - 30);
+		car[amountOfCars*3/4].setTurnLine(leftCrossLine + 30);
+		
+		timer.restart();
 	}
 	
 }
