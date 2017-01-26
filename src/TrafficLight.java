@@ -33,6 +33,10 @@ public class TrafficLight extends JPanel {
 		this.color = color;
 		this.repaint();
 	}
+
+	public Color getColor() {
+		return color;
+	}
 	
 	public void setAngle(int angle) {
 		this.angle = angle;

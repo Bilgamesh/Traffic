@@ -17,6 +17,7 @@ public class Car extends JPanel {
 	private Color carColor;
 	private Random rd;
 	private boolean isGoingToTurn;
+	private Map map;
 	
 	public Car() {
 		angle = 0;
@@ -27,6 +28,7 @@ public class Car extends JPanel {
 		frameWidth = ((int) Math.sqrt(Math.pow(width, 2) + Math.pow(height/2, 2)) + 1) * 2;
 		speed = 0.3;
 		rd = new Random();
+		map = new Map();
 	}
 
 	public void paintComponent(Graphics g) {
@@ -80,6 +82,73 @@ public class Car extends JPanel {
 	public void setTurnLine(int turnLine) {
 		this.turnLine = turnLine;
 	}
+
+	// Returns the width of the car rectangle (not of the frame).
+	public int getCarWidth() {
+		return width;
+	}
+
+	// Returns the height of the car rectangle (not of the frame).
+	public int getCarHeight() {
+		return height;
+	}
+
+	// Returns the 'X' coordinate of the car rectangle (not of the frame).
+	public int getCarX() {
+		return getX()+frameWidth/2;
+	}
+
+	// Returns the 'Y' coordinate of the car rectangle (not of the frame).
+	public int getCarY() {
+		return getY()+frameWidth/2;
+	}
+
+	public double getCarFrontY() {
+		return getCarY() + (width * Math.sin(Math.toRadians(angle)));
+	}
+
+	public double getCarFrontX() {
+		return getCarX() + (width * Math.cos(Math.toRadians(angle)));
+	}
+
+	public double getCarFront() {
+		if (angle == 0 || angle == 360 || angle == 180)
+			return getCarFrontX();
+		else if (angle == 90 || angle == 270)
+			return getCarFrontY();
+		else
+			return 0;
+	}
+
+	public int getFrameWidth() {
+		return frameWidth;
+	}
+
+	public void setRespawnPosition(int x, int y, int angle) {
+		respawnX = x;
+		respawnY = y;
+		respawnAngle = angle;
+	}
+
+	public int getRespawnAngle() {
+		return respawnAngle;
+	}
+
+	public int getRespawnX() {
+		return respawnX;
+	}
+
+	public int getRespawnY() {
+		return respawnY;
+	}
+
+	public void respawn() {
+		setCarPosition(respawnX, respawnY, respawnAngle);
+	}
+
+	public void setRandomSpeed() {
+		setSpeed(rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2));
+	}
 	
 	public boolean isAtTurningPosition() {
 		if ((angle >= 0) && (angle < 90) && (getCarFrontX() > turnLine))
@@ -88,10 +157,7 @@ public class Car extends JPanel {
 			return true;
 		else if ((angle >= 180 && angle < 270) && (getCarFrontX() < turnLine))
 			return true;
-		else if ((angle >= 270 && angle < 360) && (getCarFrontY() < turnLine))
-			return true;
-		else
-			return false;
+		else return (angle >= 270 && angle < 360) && (getCarFrontY() < turnLine);
 	}
 
 	public void moveAsSlowlyAs(Car car) {
@@ -106,10 +172,7 @@ public class Car extends JPanel {
 	}
 	
 	public boolean isOnMap() {
-		if (getCarX() > 0 && getCarX() < 800 && getCarY() > 0 && getCarY() < 600)
-			return true;
-		else
-			return false;
+		return getCarX() > 0 && getCarX() < 800 && getCarY() > 0 && getCarY() < 600;
 	}
 	
 	public boolean hasLeftMap() {
@@ -119,54 +182,40 @@ public class Car extends JPanel {
 			return true;
 		else if (angle == 180 && getCarX() < 0)
 			return true;
-		else if (angle == 270 && getCarY() < 0)
-			return true;
-		else
-			return false;
+		else return angle == 270 && getCarY() < 0;
 	}
 	
 	public boolean hasCrossedLine() {
-		if ((angle == 0 || angle == 360) && getCarFrontX() > TrafficGUI.getLeftCrossLine())
+		if ((angle == 0 || angle == 360) && getCarFrontX() > map.getLeftCrossLine())
 			return true;
-		else if (angle == 180 && getCarFrontX() < TrafficGUI.getRightCrossLine())
+		else if (angle == 180 && getCarFrontX() < map.getRightCrossLine())
 			return true;
-		else if (angle == 90 && getCarFrontY() > TrafficGUI.getTopCrossLine())
+		else if (angle == 90 && getCarFrontY() > map.getTopCrossLine())
 			return true;
-		else if (angle == 270 && getCarFrontY() < TrafficGUI.getBottomCrossLine())
-			return true;
-		else
-			return false;
+		else return angle == 270 && getCarFrontY() < map.getBottomCrossLine();
 	}
 	
 	public boolean isNearCrossing() {
-		if (angle == 0 && getCarFrontX() < TrafficGUI.getLeftCrossLine() && getCarFrontX() > TrafficGUI.getLeftCrossLine() - 5)
+		if (angle == 0 && getCarFrontX() < map.getLeftCrossLine() && getCarFrontX() > map.getLeftCrossLine() - 5)
 			return true;
-		else if (angle == 180 && getCarFrontX() > TrafficGUI.getRightCrossLine() && getCarFrontX() < TrafficGUI.getRightCrossLine() + 5)
+		else if (angle == 180 && getCarFrontX() > map.getRightCrossLine() && getCarFrontX() < map.getRightCrossLine() + 5)
 			return true;
-		else if (angle == 90 && getCarFrontY() < TrafficGUI.getTopCrossLine() && getCarFrontY() > TrafficGUI.getTopCrossLine() - 5)
-			return true;
-		else if (angle == 270 && getCarFrontY() > TrafficGUI.getBottomCrossLine() && getCarFrontY() < TrafficGUI.getBottomCrossLine() + 5)
+		else if (angle == 90 && getCarFrontY() < map.getTopCrossLine() && getCarFrontY() > map.getTopCrossLine() - 5)
 			return true;
 		else
-			return false;
+			return angle == 270 && getCarFrontY() > map.getBottomCrossLine() && getCarFrontY() < map.getBottomCrossLine() + 5;
 	}
 	
 	// Returns true if the distance on 'Y' axis between the instance of this class
 	// and the parameter car is smaller than value of the distance parameter. 
 	public boolean isCloseY(Car car, double distance) {
-		if (Math.abs(this.getCarY() - car.getCarY()) < distance)
-			return true;
-		else
-			return false;
+		return Math.abs(this.getCarY() - car.getCarY()) < distance;
 	}
 	
 	// Returns true if the distance on 'X' axis between the instance of this class
 	// and the parameter car is smaller than value of the distance parameter. 
 	public boolean isCloseX(Car car, double distance) {
-		if (Math.abs(this.getCarX() - car.getCarX()) < distance)
-			return true;
-		else
-			return false;
+		return Math.abs(this.getCarX() - car.getCarX()) < distance;
 	}
 	
 	public boolean isFollowing(Car car, double distance) {
@@ -185,16 +234,6 @@ public class Car extends JPanel {
 			setSpeed(0);
 	}
 	
-	// Returns the width of the car rectangle (not of the frame).
-	public int getCarWidth() {
-		return width;
-	}
-	
-	// Returns the height of the car rectangle (not of the frame).
-	public int getCarHeight() {
-		return height;
-	}
-	
 	public void setCarSize(int width, int height) {
 		this.width = width;
 		this.height = height;
@@ -205,63 +244,6 @@ public class Car extends JPanel {
 	public void setCarColor(Color color) {
 		carColor = color;
 		repaint();
-	}
-	
-	// Returns the 'X' coordinate of the car rectangle (not of the frame).
-	public int getCarX() {
-		return getX()+frameWidth/2;
-	}
-	
-	// Returns the 'Y' coordinate of the car rectangle (not of the frame).
-	public int getCarY() {
-		return getY()+frameWidth/2;
-	}
-	
-	public double getCarFrontY() {
-		return getCarY() + (width * Math.sin(Math.toRadians(angle)));
-	}
-	
-	public double getCarFrontX() {
-		return getCarX() + (width * Math.cos(Math.toRadians(angle)));
-	}
-	
-	public double getCarFront() {
-		if (angle == 0 || angle == 360 || angle == 180)
-			return getCarFrontX();
-		else if (angle == 90 || angle == 270)
-			return getCarFrontY();
-		else
-			return 0;
-	}
-	
-	public int getFrameWidth() {
-		return frameWidth;
-	}
-	
-	public void setRespawnPosition(int x, int y, int angle) {
-		respawnX = x;
-		respawnY = y;
-		respawnAngle = angle;
-	}
-	
-	public int getRespawnAngle() {
-		return respawnAngle;
-	}
-	
-	public int getRespawnX() {
-		return respawnX;
-	}
-	
-	public int getRespawnY() {
-		return respawnY;
-	}
-	
-	public void respawn() {
-		setCarPosition(respawnX, respawnY, respawnAngle);
-	}
-	
-	public void setRandomSpeed() {
-		setSpeed(rd.nextDouble() + 1 - rd.nextDouble() * rd.nextInt(2));
 	}
 	
 	public void rotateBy(double degree) {
