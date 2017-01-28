@@ -12,14 +12,17 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 public class Car extends JPanel {
-	private int width, height, frameWidth, respawnX, respawnY, respawnAngle, turnLine;
+	private int width, height, frameWidth, respawnX, respawnY, respawnAngle, turnLine, defaultX, defaultY, defaultAngle;
 	private double angle, Xposition, Yposition, speed;
 	private Color carColor;
 	private Random rd;
 	private boolean isGoingToTurn;
 	private Map map;
-	
+
 	public Car() {
+		defaultAngle = 0;
+		defaultX = 0;
+		defaultY = 0;
 		angle = 0;
 		width = 70;
 		height = 30;
@@ -28,7 +31,6 @@ public class Car extends JPanel {
 		frameWidth = ((int) Math.sqrt(Math.pow(width, 2) + Math.pow(height/2, 2)) + 1) * 2;
 		speed = 0.3;
 		rd = new Random();
-		map = new Map();
 	}
 
 	public void paintComponent(Graphics g) {
@@ -120,8 +122,26 @@ public class Car extends JPanel {
 			return 0;
 	}
 
-	public int getFrameWidth() {
-		return frameWidth;
+	public void setDefaultCarPosition(int x, int y, int angle) {
+		defaultX = x;
+		defaultY = y;
+		defaultAngle = angle;
+	}
+
+	public void respawnAtDefaultPosition() {
+		setCarPosition(defaultX, defaultY, defaultAngle);
+	}
+
+	public int getDefaultX() {
+		return defaultX;
+	}
+
+	public int getDefaultY() {
+		return defaultY;
+	}
+
+	public int getDefaultAngle() {
+		return defaultAngle;
 	}
 
 	public void setRespawnPosition(int x, int y, int angle) {
@@ -135,12 +155,10 @@ public class Car extends JPanel {
 	}
 
 	public int getRespawnX() {
-		return respawnX;
-	}
+		return respawnX; }
 
 	public int getRespawnY() {
-		return respawnY;
-	}
+		return respawnY; }
 
 	public void respawn() {
 		setCarPosition(respawnX, respawnY, respawnAngle);
@@ -151,13 +169,10 @@ public class Car extends JPanel {
 	}
 	
 	public boolean isAtTurningPosition() {
-		if ((angle >= 0) && (angle < 90) && (getCarFrontX() > turnLine))
-			return true;
-		else if ((angle >= 90) && (angle < 180) && (getCarFrontY() > turnLine))
-			return true;
-		else if ((angle >= 180 && angle < 270) && (getCarFrontX() < turnLine))
-			return true;
-		else return (angle >= 270 && angle < 360) && (getCarFrontY() < turnLine);
+		return ((angle >= 0) && (angle < 90) && (getCarFrontX() > turnLine) && (getCarFrontX() < turnLine + 3))
+				|| ((angle >= 90) && (angle < 180) && (getCarFrontY() > turnLine) && (getCarFront() < turnLine + 3))
+				|| ((angle >= 180 && angle < 270) && (getCarFrontX() < turnLine) && (getCarFrontX() > turnLine - 3))
+				|| ((angle >= 270 && angle < 360) && (getCarFrontY() < turnLine) && (getCarFrontY() > turnLine - 3));
 	}
 
 	public void moveAsSlowlyAs(Car car) {
@@ -176,34 +191,22 @@ public class Car extends JPanel {
 	}
 	
 	public boolean hasLeftMap() {
-		if ((angle == 0 || angle == 360) && getCarX() > 800)
-			return true;
-		else if (angle == 90 && getCarY() > 600)
-			return true;
-		else if (angle == 180 && getCarX() < 0)
-			return true;
-		else return angle == 270 && getCarY() < 0;
+		return ((angle == 0 || angle == 360) && (getCarX() > 800)) || (angle == 90 && getCarY() > 600)
+				|| (angle == 180 && getCarX() < 0) || (angle == 270 && getCarY() < 0);
 	}
 	
-	public boolean hasCrossedLine() {
-		if ((angle == 0 || angle == 360) && getCarFrontX() > map.getLeftCrossLine())
-			return true;
-		else if (angle == 180 && getCarFrontX() < map.getRightCrossLine())
-			return true;
-		else if (angle == 90 && getCarFrontY() > map.getTopCrossLine())
-			return true;
-		else return angle == 270 && getCarFrontY() < map.getBottomCrossLine();
+	public boolean hasCrossedLine(Map map) {
+		return ((angle == 0 || angle == 360) && getCarFrontX() > map.getLeftCrossLine())
+				|| (angle == 180 && getCarFrontX() < map.getRightCrossLine())
+				|| (angle == 90 && getCarFrontY() > map.getTopCrossLine())
+				|| (angle == 270 && getCarFrontY() < map.getBottomCrossLine());
 	}
 	
-	public boolean isNearCrossing() {
-		if (angle == 0 && getCarFrontX() < map.getLeftCrossLine() && getCarFrontX() > map.getLeftCrossLine() - 5)
-			return true;
-		else if (angle == 180 && getCarFrontX() > map.getRightCrossLine() && getCarFrontX() < map.getRightCrossLine() + 5)
-			return true;
-		else if (angle == 90 && getCarFrontY() < map.getTopCrossLine() && getCarFrontY() > map.getTopCrossLine() - 5)
-			return true;
-		else
-			return angle == 270 && getCarFrontY() > map.getBottomCrossLine() && getCarFrontY() < map.getBottomCrossLine() + 5;
+	public boolean isNearCrossing(Map map) {
+		return (angle == 0 && getCarFrontX() < map.getLeftCrossLine() && getCarFrontX() > map.getLeftCrossLine() - 5)
+				|| (angle == 180 && getCarFrontX() > map.getRightCrossLine() && getCarFrontX() < map.getRightCrossLine() + 5)
+				|| (angle == 90 && getCarFrontY() < map.getTopCrossLine() && getCarFrontY() > map.getTopCrossLine() - 5)
+				|| (angle == 270 && getCarFrontY() > map.getBottomCrossLine() && getCarFrontY() < map.getBottomCrossLine() + 5);
 	}
 	
 	// Returns true if the distance on 'Y' axis between the instance of this class
@@ -227,10 +230,10 @@ public class Car extends JPanel {
 			return false;
 	}
 	
-	public void stopNearCrossing() {
+	public void stopNearCrossing(Map map) {
 		while (getSpeed() >= 0.3)
 			accelerateBy(-0.01);	
-		if (getSpeed() <= 0.3 && isNearCrossing())
+		if (getSpeed() <= 0.3 && isNearCrossing(map))
 			setSpeed(0);
 	}
 	

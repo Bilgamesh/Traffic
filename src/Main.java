@@ -1,11 +1,10 @@
-import javax.swing.JFrame;
+import javax.swing.*;
 
 public class Main extends JFrame {
 
 	public static void main(String[] args) {
-		GUI app = new GUI();
-		app.setDefaultCloseOperation(EXIT_ON_CLOSE);
-		//app.setVisible(true);
+		Window app = new Window();
+		app.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		app.setVisible(true);
 	}
-	
 }

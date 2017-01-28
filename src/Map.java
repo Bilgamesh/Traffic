@@ -1,16 +1,12 @@
 import javax.swing.*;
 import java.awt.*;
 
-public class Map extends JFrame {
+public class Map extends JPanel {
     private ImageIcon backgroundImage;
     private JLabel backgroundLabel;
-    private static int topCrossLine, bottomCrossLine, leftCrossLine, rightCrossLine;
+    private int topCrossLine, bottomCrossLine, leftCrossLine, rightCrossLine;
 
     public Map() {
-        setSize(800, 600);
-        setLayout(null);
-        setResizable(false);
-        setTitle("Traffic simulator");
 
         // The coordinates of road intersection
         topCrossLine = 63;
@@ -21,6 +17,7 @@ public class Map extends JFrame {
         backgroundImage = new ImageIcon(getClass().getResource("background.png"));
         backgroundLabel = new JLabel(backgroundImage);
         backgroundLabel.setBounds(0, 0, 800, 600);
+        backgroundLabel.setLayout(null);
         add(backgroundLabel);
     }
 
@@ -28,19 +25,19 @@ public class Map extends JFrame {
         backgroundLabel.add(comp);
     }
 
-    public static int getTopCrossLine() {
+    public int getTopCrossLine() {
         return topCrossLine;
     }
 
-    public static int getBottomCrossLine() {
+    public int getBottomCrossLine() {
         return bottomCrossLine;
     }
 
-    public static int getLeftCrossLine() {
+    public int getLeftCrossLine() {
         return leftCrossLine;
     }
 
-    public static int getRightCrossLine() {
+    public int getRightCrossLine() {
         return rightCrossLine;
     }
 }
