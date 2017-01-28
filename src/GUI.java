@@ -5,17 +5,27 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-public class GUI extends JPanel implements ActionListener, ChangeListener {
+public class GUI extends JPanel implements ChangeListener {
 	private TrafficLight[] trafficLightObject;
-	private JButton restartButton;
+	private JButton restartButton, switchLightButton;
 	private JSlider trafficSlider;
+	private Map map;
 	private MovingCars cars;
+	private TrafficLightsOnMap trafficLights;
 	
-	public GUI(Map map) {
+	public GUI(Map map, MovingCars cars, TrafficLightsOnMap trafficLights) {
+		this.map = map;
+		this.cars = cars;
+		this.trafficLights = trafficLights;
+
+		map.setGUI(this);
+		trafficLights.setGui(this);
+		cars.setGui(this);
 
 		restartButton = new JButton("restart");
-		restartButton.setBounds(100,map.getBottomCrossLine()+100,100,20);
-		restartButton.addActionListener(this);
+		restartButton.setBounds(100,map.getBottomCrossLine()+100,150,30);
+		restartButton.addActionListener(cars);
+		restartButton.addActionListener(trafficLights);
 		restartButton.setLayout(null);
 		add(restartButton);
 		
@@ -26,28 +36,26 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
 		trafficSlider.setSnapToTicks(true);
 		trafficSlider.addChangeListener(this);
 		trafficSlider.setLayout(null);
+		trafficSlider.addChangeListener(this);
 		add(trafficSlider);
+
+		switchLightButton = new JButton("switch lights");
+		switchLightButton.setBounds(100, map.getBottomCrossLine()+10,150,30);
+		switchLightButton.addActionListener(trafficLights);
+		switchLightButton.setLayout(null);
+		add(switchLightButton);
 	}
 
-	public static void main(String[] args) {
-		Main app = new Main();
-		app.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		app.setVisible(true);
-		System.out.println();
+	public void setSwitchLightButtonEnabled(boolean arg) {
+		switchLightButton.setEnabled(arg);
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		Object z = e.getSource();
-		
-		if (z == restartButton) {
-			reset();
-		}
-		
-	}//end of ActionListener
-	
-	public void reset() {
+	public JButton getSwitchLightButton() {
+		return switchLightButton;
+	}
 
+	public JButton getRestartButton() {
+		return restartButton;
 	}
 
 	@Override
@@ -55,8 +63,9 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
 		Object z = e.getSource();
 		
 		if (z == trafficSlider) {
-			//cars.setAmountOfCars(trafficSlider.getValue());
+			cars.setAmountOfCars(trafficSlider.getValue());
 			//reset();
+			restartButton.getAction();
 		}
 		
 	}

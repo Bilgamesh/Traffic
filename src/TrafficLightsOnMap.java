@@ -5,12 +5,14 @@ import java.awt.event.ActionListener;
 
 public class TrafficLightsOnMap extends JPanel implements ActionListener {
     private TrafficLight[] trafficLightObject;
-    private JButton button;
     private long backupTime;
     private Timer timer;
     private boolean YTurningGreen, XTurningGreen;
+    private Map map;
+    private GUI gui;
 
     public TrafficLightsOnMap(Map map) {
+        this.map = map;
 
         trafficLightObject = new TrafficLight[4];
         for (int i = 0; i < 4; i++) {
@@ -33,13 +35,16 @@ public class TrafficLightsOnMap extends JPanel implements ActionListener {
 
         trafficLightObject[3].setBounds(map.getRightCrossLine()-10, map.getBottomCrossLine(), 20, 20);	// bottom
 
-        button = new JButton("switch lights");
-        button.setBounds(100, map.getBottomCrossLine(),150,30);
-        button.addActionListener(this);
-        add(button);
-
         timer = new Timer(500, this);
 
+    }
+
+    public void setMap(Map map) {
+        this.map = map;
+    }
+
+    public void setGui(GUI gui) {
+        this.gui = gui;
     }
 
     public void setYellowX() {
@@ -81,7 +86,7 @@ public class TrafficLightsOnMap extends JPanel implements ActionListener {
     }
 
     public void restart() {
-        button.setEnabled(true);
+        gui.setSwitchLightButtonEnabled(true);
         timer.restart();
         timer.stop();
         trafficLightObject[0].setColor(Color.RED);										// left
@@ -107,11 +112,16 @@ public class TrafficLightsOnMap extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         Object z = e.getSource();
-        if (z == button) {
-            button.setEnabled(false);
+
+        if (z == gui.getSwitchLightButton()) {
+            gui.setSwitchLightButtonEnabled(false);
             backupTime = System.currentTimeMillis();
             timer.restart();
             timer.start();
+        }
+
+        if (z == gui.getRestartButton()) {
+            restart();
         }
 
         if (z == timer) {
@@ -132,7 +142,7 @@ public class TrafficLightsOnMap extends JPanel implements ActionListener {
             if (YTurningGreen && System.currentTimeMillis() - backupTime > 6000) {
                 setGreenY();
                 YTurningGreen = false;
-                button.setEnabled(true);
+                gui.setSwitchLightButtonEnabled(true);
                 timer.stop();
             }
             if (XTurningGreen && System.currentTimeMillis() - backupTime > 2000) {
@@ -144,7 +154,7 @@ public class TrafficLightsOnMap extends JPanel implements ActionListener {
             if (XTurningGreen && System.currentTimeMillis() - backupTime > 6000) {
                 setGreenX();
                 XTurningGreen = false;
-                button.setEnabled(true);
+                gui.setSwitchLightButtonEnabled(true);
                 timer.stop();
             }
         }

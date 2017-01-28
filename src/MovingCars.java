@@ -8,13 +8,16 @@ public class MovingCars extends JPanel implements ActionListener {
     private Car[] car;
     private Timer timer;
     private double passRedLightSpeed;
+    private Random rd;
     private TrafficLightsOnMap trafficLights;
-    Random rd;
     private Map map;
+    private GUI gui;
 
-    public MovingCars(int amountOfCars, Map map ,TrafficLightsOnMap trafficLights) {
-        this.map = map;
+    public MovingCars(int amountOfCars, Map map, TrafficLightsOnMap trafficLights) {
         this.amountOfCars = amountOfCars;
+        this.map = map;
+        this.trafficLights = trafficLights;
+
         passRedLightSpeed = 1.3;
         rd = new Random();
         this.trafficLights = trafficLights;
@@ -31,6 +34,10 @@ public class MovingCars extends JPanel implements ActionListener {
         timer = new Timer(10,this);
         timer.addActionListener(this);
         timer.start();
+    }
+
+    public void setGui(GUI gui) {
+        this.gui = gui;
     }
 
 //    public void addOnMap(Map map) {
@@ -94,6 +101,10 @@ public class MovingCars extends JPanel implements ActionListener {
                     car[i].setGoingToTurn(false);
             }
         }// end of timer
+
+        if (z == gui.getRestartButton()) {
+            restart();
+        }
     }
 
     public void setAmountOfCars(int newAmountOfCars) {
@@ -152,6 +163,14 @@ public class MovingCars extends JPanel implements ActionListener {
 
     public void startTimer() {
         timer.start();
+    }
+
+    public void setTrafficLights(TrafficLightsOnMap trafficLights) {
+        this.trafficLights = trafficLights;
+    }
+
+    public void setMap(Map map) {
+        this.map = map;
     }
 
     private int howManyCarsLeftMap(Car[] car, int firstCar, int lastCar) {

@@ -15,13 +15,14 @@ public class Window extends JFrame {
 
         map = new Map();
         trafficLights = new TrafficLightsOnMap(map);
-        cars = new MovingCars(24, map , trafficLights);
-        gui = new GUI(map);
+        cars = new MovingCars(24, map, trafficLights);
+        gui = new GUI(map, cars, trafficLights);
 
         add(gui);
         add(cars);
         add(trafficLights);
         add(map);
+
         map.setLayout(null);
         map.setSize(800,600);
         cars.setSize(800,600);

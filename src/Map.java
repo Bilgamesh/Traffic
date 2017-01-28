@@ -1,10 +1,10 @@
 import javax.swing.*;
-import java.awt.*;
 
 public class Map extends JPanel {
     private ImageIcon backgroundImage;
     private JLabel backgroundLabel;
     private int topCrossLine, bottomCrossLine, leftCrossLine, rightCrossLine;
+    private GUI gui;
 
     public Map() {
 
@@ -21,8 +21,8 @@ public class Map extends JPanel {
         add(backgroundLabel);
     }
 
-    public void addOnTop(Component comp) {
-        backgroundLabel.add(comp);
+    public void setGUI(GUI gui) {
+        this.gui = gui;
     }
 
     public int getTopCrossLine() {
