@@ -4,8 +4,8 @@ import java.awt.event.ActionListener;
 import java.util.Random;
 
 public class MovingCars extends JPanel implements ActionListener {
-    private int amountOfCars;
-    private Car[] car;
+    private int amountOfCars, pointOfStop;
+    private Car[] cars;
     private Timer timer;
     private double passRedLightSpeed;
     private Random rd;
@@ -18,20 +18,21 @@ public class MovingCars extends JPanel implements ActionListener {
         this.map = map;
         this.trafficLights = trafficLights;
 
-        passRedLightSpeed = 1.3;
+        passRedLightSpeed = 1.6;
         rd = new Random();
         this.trafficLights = trafficLights;
 
-        car = new Car[amountOfCars];
-        for (int i = 0; i < car.length; i++) {
-            car[i] = new Car();
-            car[i].setOpaque(false);
-            car[i].setRandomColor();
-            add(car[i]);
+        cars = new Car[amountOfCars];
+        for (int i = 0; i < cars.length; i++) {
+            cars[i] = new Car();
+            cars[i].setOpaque(false);
+            cars[i].setRandomColor();
+            add(cars[i]);
         }
         spawnCarsAtDefaultPositions();
 
-        timer = new Timer(10,this);
+        timer = new Timer(10, this);
+        timer.setInitialDelay(0);
         timer.addActionListener(this);
         timer.start();
     }
@@ -40,65 +41,76 @@ public class MovingCars extends JPanel implements ActionListener {
         this.gui = gui;
     }
 
-//    public void addOnMap(Map map) {
-//        for (int i = 0; i < car.length; i++) {
-//        }
-//    }
-
     @Override
     public void actionPerformed(ActionEvent e) {
         Object z = e.getSource();
+
+        // The following block of code is performed every 10 milliseconds
         if (z == timer) {
-            for (int i = 0; i < car.length; i++) {
-                car[i].moveAhead();
 
-                int frontCarNumber;
-                if (i == 0)
-                    frontCarNumber = (car.length / 4) - 1;
-                else if (i == car.length / 4)
-                    frontCarNumber = (car.length / 2) - 1;
-                else if (i == car.length / 2)
-                    frontCarNumber = (car.length * 3 / 4) - 1;
-                else if (i == car.length * 3 / 4)
-                    frontCarNumber = car.length - 1;
-                else
-                    frontCarNumber = i - 1;
+            // The purpose of this loop is to perform the following code for every car
+            for (Car car : cars) {
 
-                if (car[i].hasLeftMap() && car[frontCarNumber].isOnMap() && car[frontCarNumber].getAngle() == car[frontCarNumber].getRespawnAngle()) {
-                    car[i].respawn();
-                    car[i].setRandomSpeed();
-                    car[i].setRandomColor();
-                }
-                if (car[i].isFollowing(car[frontCarNumber], 110)) {
-                    car[i].moveAsSlowlyAs(car[frontCarNumber]);
-                }
-                if ( (!car[i].isFollowing(car[frontCarNumber], 110))
-                        && ((car[i].getSpeed() > passRedLightSpeed) || (isLightGreenFor(car[i])) || (car[i].hasCrossedLine(map)))
-                        && ((!car[i].isGoingToTurn()) || (car[i].getSpeed() < 0.7)) ) {
-                    car[i].accelerateBy(0.007);
+                car.moveAhead();
+
+                // This block of code makes the car slow down when it reaches a certain distance from another car
+                if (car.isApproachingAnyOfCars(cars, 40)) {
+                    car.accelerateBy(-0.04);
                 }
 
-                // stops cars when lights are changing
-                if ( (!isLightGreenFor(car[i])) && (!car[i].hasCrossedLine(map))
-                        && (car[i].getSpeed() < passRedLightSpeed) ) {
-                    car[i].stopNearCrossing(map);
-                }
-            }
+                // This block of code prevents cars from changing direction if speed gets negative
+                if (car.getSpeed() < 0)
+                    car.setSpeed(0);
 
-            for (int i = 0; i < car.length; i = i + car.length/4) {
-                if ((car[i].isAtTurningPosition()  || car[i].getAngle() > car[i].getRespawnAngle()) && (car[i].getAngle() < car[i].getRespawnAngle() + 90) && (car[i].getSpeed() < 0.8)) {
-                    car[i].rotateBy(car[i].getSpeed()/1.5);
-                }
-                if (haveAllCarsLeft(car, i, i+(car.length/4 - 1))) {
-                    car[i].respawn();
-                    car[i].setRandomSpeed();
-                    car[i].setRandomColor();
+                // This block of code accelerates cars if several conditions are met
+                // 1. The car won't accelerate if there is another car in front of it
+                // 2. It won't accelerate if the traffic light is red...
+                // 3. ...unless the car has already entered the road intersection...
+                // 4. ...or it's speed is so high that there's not enough time to react and stop (thus the passRedLightSpeed variable)...
+                // 5. The car that is going to turn doesn't accelerate unless it's speed is very low (less than 0.7 pixels per 10 milliseconds)
+                if ((!car.isBehindAnyCarAtDistance(cars, 40))
+                        && (car.getSpeed() > passRedLightSpeed || car.hasGreenLight(trafficLights) || car.hasCrossedLine(map))
+                        && (!car.isGoingToTurn() || car.getSpeed() < 0.7)) {
+                    car.accelerateBy(0.003);
                 }
 
-                if (car[i].getSpeed() < 0.8 )
-                    car[i].setGoingToTurn(true);
-                else
-                    car[i].setGoingToTurn(false);
+                // This block of code makes cars slow down and stop when the traffic light is changing from green to red if several conditions are met
+                // 1. The light for the car is no longer green
+                // 2. The car hasn't entered the road intersection
+                // 3. The car's speed is low enough so that there is enough time to react to the change of the traffic light
+                if ((!car.hasGreenLight(trafficLights)) && (!car.hasCrossedLine(map)) && (car.getSpeed() < passRedLightSpeed)) {
+                    car.stopNearCrossing(map);
+                }
+
+                // This block of code makes some cars turn right if following conditions are met
+                // 1. The car has entered specified position at the road intersection
+                // or it has left the position, but started turning (thus it's current angle is larger than it's default angle)
+                // 2. Car's speed is low enough (less than 0.8 pixels per 10 milliseconds)
+                if ((car.isAtTurningPosition() || (car.getAngle() > car.getRespawnAngle()))
+                        && (car.isGoingToTurn())
+                        && (car.getSpeed() < 0.8)) {
+                    car.rotateBy(car.getSpeed() / 1.5);
+                }
+                if (car.isGoingToTurn() && car.getAngle() >= (car.getRespawnAngle() + 90)) {
+                    car.setGoingToTurn(false); // After the 90 degree turn is performed, the car stops turning
+                }
+
+                // This block of code makes the cars that are going to turn right slow down
+                if (car.isGoingToTurn() && !car.hasCrossedLine(map) && car.getSpeed() >= 0.8)
+                    car.accelerateBy(-0.003);
+
+                // This block of code makes every car respawn with random speed and new color
+                // after the car has left the visible map. To prevent collisions this is performed only
+                // if there is no other car in the respawn area.
+                // This creates the illusion of new cars coming into the streets.
+                // Every car gets a 1 in 3 chance of turning right
+                if (car.hasLeftMap(map) && car.hasEmptyRespawnArea(cars)) {
+                    car.respawn();
+                    car.setRandomSpeed();
+                    car.setRandomColor();
+                    if (rd.nextInt(3) == 0)
+                        car.setGoingToTurn(true);
+                }
             }
         }// end of timer
 
@@ -111,80 +123,60 @@ public class MovingCars extends JPanel implements ActionListener {
         this.amountOfCars = newAmountOfCars;
     }
 
+    // This method removes current cars and creates new ones
     public void restart() {
-        for (int i = 0; i < car.length; i++) {
-            car[i].setVisible(false);
+        for (int i = 0; i < cars.length; i++) {
+            cars[i].setVisible(false);
         }
-        car = new Car[amountOfCars];
-        for (int i = 0; i < car.length; i++) {
-            car[i] = new Car();
-            car[i].setRandomColor();
-            car[i].setOpaque(false);
-            add(car[i]);
+        cars = new Car[amountOfCars];
+        for (int i = 0; i < cars.length; i++) {
+            cars[i] = new Car();
+            cars[i].setRandomColor();
+            cars[i].setOpaque(false);
+            add(cars[i]);
         }
         spawnCarsAtDefaultPositions();
         timer.restart();
     }
 
+    // In this method cars are divided into four groups. Each group gets it's own line on the road, thus each group has it's own coordinates
     public void spawnCarsAtDefaultPositions() {
-        for (int i = 0; i < car.length/4; i++) {									// vertical left line
-            car[i].setCarPosition(400, 600 - 100 * i, 90);
-            car[i].setRespawnPosition(400, -100, 90);
-            car[i].setRandomSpeed();
+
+        // vertical left line
+        for (int i = 0; i < cars.length / 4; i++) {
+            cars[i].setCarPosition(400, 600 - 100 * i, 90);
+            cars[i].setRespawnPosition(400, -100, 90);
+            cars[i].setRandomSpeed();
+            cars[i].setTurnLine(map.getTopCrossLine() + 27);
+
         }
-        for (int i = car.length/4; i < car.length/2; i++) {						// vertical right line
-            car[i].setCarPosition(500, 100*i, 270);
-            car[i].setRespawnPosition(500, 750, 270);
-            car[i].setRandomSpeed();
+
+        // vertical right line
+        for (int i = cars.length / 4; i < cars.length / 2; i++) {
+            cars[i].setCarPosition(500, 100 * i, 270);
+            cars[i].setRespawnPosition(500, 750, 270);
+            cars[i].setRandomSpeed();
+            cars[i].setTurnLine(map.getBottomCrossLine() - 30);
+
         }
-        for (int i = car.length/2; i < car.length * 3 / 4; i++) {				// horizontal top line
-            car[i].setCarPosition(map.getRightCrossLine() + 100 + (i-car.length/2)*(car[i].getCarWidth()+20), 95, 180);
-            car[i].setRespawnPosition(1000, 95, 180);
-            car[i].setSpeed(0.4);
+
+        // horizontal top line
+        for (int i = cars.length / 2; i < cars.length * 3 / 4; i++) {
+            cars[i].setCarPosition(map.getRightCrossLine() + 100 + (i - cars.length / 2) * (cars[i].getCarWidth() + 20), 95, 180);
+            cars[i].setRespawnPosition(1000, 95, 180);
+            cars[i].setSpeed(0.4);
+            cars[i].setTurnLine(map.getRightCrossLine() - 30);
+
         }
-        for (int i = car.length * 3 / 4; i < car.length; i++) {					// horizontal bottom line
-            car[i].setCarPosition(map.getLeftCrossLine() - 100 - (i-car.length*3/4)*(car[i].getCarWidth()+20), 195, 0);
-            car[i].setRespawnPosition(-150, 195, 0);
-            car[i].setSpeed(0.4);
+
+        // horizontal bottom line
+        for (int i = cars.length * 3 / 4; i < cars.length; i++) {
+            cars[i].setCarPosition(map.getLeftCrossLine() - 100 - (i - cars.length * 3 / 4) * (cars[i].getCarWidth() + 20), 195, 0);
+            cars[i].setRespawnPosition(-150, 195, 0);
+            cars[i].setSpeed(0.4);
+            cars[i].setTurnLine(map.getLeftCrossLine() + 30);
+
         }
-        car[0].setTurnLine(map.getTopCrossLine() + 27);
-        car[car.length/4].setTurnLine(map.getBottomCrossLine() - 30);
-        car[car.length/2].setTurnLine(map.getRightCrossLine() - 30);
-        car[car.length*3/4].setTurnLine(map.getLeftCrossLine() + 30);
     }
 
-    private boolean haveAllCarsLeft(Car[] car, int firstCar, int lastCar) {
-        return howManyCarsLeftMap(car, firstCar, lastCar) == lastCar + 1 - firstCar;
-    }
-
-    public void stopTimer() {
-        timer.stop();
-    }
-
-    public void startTimer() {
-        timer.start();
-    }
-
-    public void setTrafficLights(TrafficLightsOnMap trafficLights) {
-        this.trafficLights = trafficLights;
-    }
-
-    public void setMap(Map map) {
-        this.map = map;
-    }
-
-    private int howManyCarsLeftMap(Car[] car, int firstCar, int lastCar) {
-        int counter = 0;
-        for (int i = firstCar; i <= lastCar; i++)
-            if (car[i].hasLeftMap())
-                counter++;
-        return counter;
-    }
-
-    private boolean isLightGreenFor(Car car) {
-        if ((car.getAngle() == 0 || car.getAngle() == 180 || car.getAngle() == 360) && (!car.isGoingToTurn() || !car.hasCrossedLine(map)))
-            return trafficLights.isGreenX();
-        else
-            return !((car.getAngle() == 90 || car.getAngle() == 270) && (!car.isGoingToTurn() || !car.hasCrossedLine(map))) || trafficLights.isGreenY();
-    }
 }

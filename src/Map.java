@@ -25,18 +25,22 @@ public class Map extends JPanel {
         this.gui = gui;
     }
 
+    // This method returns the top coordinate of the road intersection
     public int getTopCrossLine() {
         return topCrossLine;
     }
 
+    // This method returns the bottom coordinate of the road intersection
     public int getBottomCrossLine() {
         return bottomCrossLine;
     }
 
+    // This method returns the left coordinate of the road intersection
     public int getLeftCrossLine() {
         return leftCrossLine;
     }
 
+    // This method returns the right coordinate of the road intersection
     public int getRightCrossLine() {
         return rightCrossLine;
     }

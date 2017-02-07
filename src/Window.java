@@ -19,19 +19,19 @@ public class Window extends JFrame {
         gui = new GUI(map, cars, trafficLights);
 
         add(gui);
-        add(cars);
         add(trafficLights);
+        add(cars);
         add(map);
 
         map.setLayout(null);
-        map.setSize(800,600);
-        cars.setSize(800,600);
+        map.setSize(800, 600);
+        cars.setSize(800, 600);
         cars.setOpaque(false);
         cars.setLayout(null);
-        trafficLights.setSize(800,600);
+        trafficLights.setSize(800, 600);
         trafficLights.setOpaque(false);
         trafficLights.setLayout(null);
-        gui.setSize(800,600);
+        gui.setSize(800, 600);
         gui.setOpaque(false);
         gui.setLayout(null);
 
