@@ -1,12 +1,11 @@
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class GUI extends JPanel implements ChangeListener, ActionListener {
-    private final JButton restartButton, switchLightButton, backToMenuButton, startButton;
+    private final JButton restartButton, switchLightButton, backToMenuButton, startButton, accidentButton;
     private final JSlider trafficSlider;
     private final MovingCars cars;
 
@@ -23,13 +22,6 @@ public class GUI extends JPanel implements ChangeListener, ActionListener {
         startButton.addActionListener(trafficLights);
         add(startButton);
 
-        restartButton = new JButton("Restart");
-        restartButton.setBounds(100, map.getBottomCrossLine() + 100, 150, 30);
-        restartButton.addActionListener(cars);
-        restartButton.addActionListener(trafficLights);
-        restartButton.setLayout(null);
-        add(restartButton);
-
         trafficSlider = new JSlider(JSlider.HORIZONTAL, 12, 32, 24);
         trafficSlider.setBounds(10, 500, 350, 30);
         trafficSlider.setOpaque(false);
@@ -44,6 +36,19 @@ public class GUI extends JPanel implements ChangeListener, ActionListener {
         switchLightButton.setLayout(null);
         switchLightButton.addActionListener(trafficLights);
         add(switchLightButton);
+
+        restartButton = new JButton("Restart");
+        restartButton.setBounds(100, switchLightButton.getY() + 40, 150, 30);
+        restartButton.addActionListener(cars);
+        restartButton.addActionListener(trafficLights);
+        restartButton.setLayout(null);
+        add(restartButton);
+
+        accidentButton = new JButton("Start accident");
+        accidentButton.setBounds(100, restartButton.getY() + 40, 150, 30);
+        accidentButton.addActionListener(cars);
+        accidentButton.setLayout(null);
+        add(accidentButton);
 
         backToMenuButton = new JButton("Pause");
         backToMenuButton.setBounds(700, 0, 100, 30);
@@ -81,11 +86,16 @@ public class GUI extends JPanel implements ChangeListener, ActionListener {
         return startButton;
     }
 
+    public JButton getAccidentButton() {
+        return accidentButton;
+    }
+
     public void setButtonsVisible(boolean arg) {
         restartButton.setVisible(arg);
         trafficSlider.setVisible(arg);
         switchLightButton.setVisible(arg);
         backToMenuButton.setVisible(arg);
+        accidentButton.setVisible(arg);
     }
 
     @Override

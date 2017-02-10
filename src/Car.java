@@ -1,66 +1,73 @@
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
+import java.awt.geom.Area;
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
-public class Car extends JPanel {
-    private final int width, height, frameWidth;
+public class Car {
+    private final int width, height;
     private final Random rd;
-    private final AffineTransform at;
     private final Rectangle carRec;
-    private final BufferedImage carOutline;
+    private final Image carOutline;
     private int respawnX, respawnY, respawnAngle, turnLine;
     private double angle, carX, carY, speed;
     private Color carColor;
     private boolean isGoingToTurn;
+    private AffineTransform at;
 
     public Car() {
         angle = 0;
         width = 70;
         height = 30;
+        carX = 0;
+        carY = 0;
+
         isGoingToTurn = false;
         carColor = Color.YELLOW;
-        frameWidth = ((int) Math.sqrt(Math.pow(width, 2) + Math.pow(height / 2, 2)) + 1) * 2; // width of the frame >= the diagonal line of the car rectangle
         speed = 0.3;
         rd = new Random();
-        setCarPosition(0, 0, 0);
+
+
         carOutline = LoadImage("src//car.png");
-        carRec = new Rectangle((frameWidth / 2), ((frameWidth / 2) - (height / 2)), width, height);
+        carRec = new Rectangle(0, 0, width, height);
         at = new AffineTransform();
     }
 
-    public void paintComponent(Graphics g) {
-        //super.paintComponent(g);
+    public void draw(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setColor(carColor);
-        at.setToRotation(Math.toRadians(angle), (frameWidth / 2), (frameWidth / 2));
-        g2d.transform(at);
+        g2d.rotate(Math.toRadians(angle), (int) carX, (int) carY);
+        carRec.setLocation((int) carX, (int) carY - height / 2);
         g2d.fill(carRec);
-        g2d.drawImage(carOutline, (frameWidth / 2), ((frameWidth / 2) - (height / 2)), null);
-        g2d.dispose();
+        g2d.drawImage(carOutline, (int) carX, (int) carY - height / 2, null);
+        g2d.setColor(Color.RED);
+        if (isGoingToTurn && (int) (System.currentTimeMillis() / 500) % 2 == 0) {
+            g2d.fillOval((int) carX + width, (int) carY + height / 2, 5, 5);
+            g2d.fillOval((int) carX - 5, (int) carY + height / 2, 5, 5);
+        }
+        at = g2d.getTransform();
+        g2d.rotate(-Math.toRadians(angle), (int) carX, (int) carY);
+
     }
 
-    BufferedImage LoadImage(String FileName) {
-        BufferedImage img = null;
+    private Image LoadImage(String FileName) {
+        Image img = null;
         try {
             img = ImageIO.read(new File(FileName));
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return img;
     }
 
-    public Rectangle getCarRec() {
-        return carRec;
+    public AffineTransform getAt() {
+        return at;
     }
 
-    public AffineTransform getAffineTransform() {
-        return at;
+    public Rectangle getCarRec() {
+        return carRec;
     }
 
     public double getSpeed() {
@@ -83,32 +90,32 @@ public class Car extends JPanel {
         this.turnLine = turnLine;
     }
 
-    // Returns the width of the car rectangle (not of the frame).
+    // Returns the width of the car
     public int getCarWidth() {
         return width;
     }
 
-    // Returns the height of the car rectangle (not of the frame).
+    // Returns the height of the car
     public int getCarHeight() {
         return height;
     }
 
-    // Returns the 'X' coordinate of the car rectangle (not of the frame).
+    // Returns the 'X' coordinate of the car
     public int getCarX() {
-        return (int) getX() + frameWidth / 2;
+        return (int) carX;
     }
 
-    // Returns the 'Y' coordinate of the car rectangle (not of the frame).
+    // Returns the 'Y' coordinate of the car
     public int getCarY() {
-        return (int) getY() + frameWidth / 2;
+        return (int) carY;
     }
 
-    // This method returns the Y coordinate of the car's front edge
+    // This method returns the Y coordinate of the car's front edge, instead of the origin point which is at the rear side of the car
     public double getCarFrontY() {
         return getCarY() + (width * Math.sin(Math.toRadians(angle)));
     }
 
-    // This method returns the X coordinate of the car's front edge
+    // This method returns the X coordinate of the car's front edge, instead of the origin point which is at the rear side of the car
     public double getCarFrontX() {
         return getCarX() + (width * Math.cos(Math.toRadians(angle)));
     }
@@ -148,10 +155,10 @@ public class Car extends JPanel {
     // This method returns true if none of the cars in the array parameter are located within a specified distance of this car's respawn coordinates
     public boolean hasEmptyRespawnArea(Car[] cars) {
         int range = 100;
-        for (int i = 0; i < cars.length; i++) {
-            if ((Math.abs(cars[i].getCarX() - getRespawnX()) < range)
-                    && (Math.abs(cars[i].getCarY() - getRespawnY()) < range)
-                    && (Math.abs(cars[i].getAngle() - getRespawnAngle()) < 35))
+        for (Car car : cars) {
+            if ((Math.abs(car.getCarX() - getRespawnX()) < range)
+                    && (Math.abs(car.getCarY() - getRespawnY()) < range)
+                    && (Math.abs(car.getAngle() - getRespawnAngle()) < 35))
                 return false;
         }
         return true;
@@ -246,11 +253,8 @@ public class Car extends JPanel {
             return (car.getCarX() < getCarX());
         } else if ((angle == 90) && Math.abs(angle - car.getAngle()) < 90) {
             return (car.getCarY() > getCarY());
-        } else if ((angle == 270) && Math.abs(angle - car.getAngle()) < 90) {
-            return (car.getCarY() < getCarY());
-        } else {
-            return false;
-        }
+        } else
+            return (angle == 270) && (Math.abs(angle - car.getAngle()) < 90) && (car.getCarY() < getCarY());
     }
 
     // This method returns true if the parameter-car is in front of this car within a specified distance
@@ -260,8 +264,8 @@ public class Car extends JPanel {
 
     // This method returns true if any of the cars in the 'cars' array is in front of this car within a specified distance
     public boolean isBehindAnyCarAtDistance(Car[] cars, int distance) {
-        for (int i = 0; i < cars.length; i++) {
-            if (isBehindAtDistance(cars[i], distance))
+        for (Car car : cars) {
+            if (isBehindAtDistance(car, distance))
                 return true;
         }
         return false;
@@ -277,7 +281,7 @@ public class Car extends JPanel {
 
     public void setCarColor(Color color) {
         carColor = color;
-        repaint();
+        //repaint();
     }
 
     // This method increases the angle of the car by the value of'degree' variable.
@@ -286,14 +290,12 @@ public class Car extends JPanel {
         angle = angle + degree;
         if (Math.abs(angle - (respawnAngle + 90)) < 1)
             angle = respawnAngle + 90;
-        repaint();
+        //repaint();
     }
 
-    // Sets the angle and the position of the car rectangle (not of the frame) to a specified set of coordinates.
+    // Sets the angle and the position of the car to a specified set of coordinates.
     public void setCarPosition(int x, int y, int angle) {
-        setBounds(x - frameWidth / 2, y - frameWidth / 2, frameWidth, frameWidth);
         this.angle = angle;
-        repaint();
         carX = x;
         carY = y;
     }
@@ -308,11 +310,32 @@ public class Car extends JPanel {
         this.isGoingToTurn = isGoingToTurn;
     }
 
-    // This method moves car rectangle (instead of the frame) by amount of pixels specified by the 'speed' variable.
+    // This method moves the car directly ahead by the amount of pixels specified by the 'speed' variable.
     public void moveAhead() {
         carX = carX + speed * Math.cos(Math.toRadians(angle));
         carY = carY + speed * Math.sin(Math.toRadians(angle));
-        setBounds((int) carX - frameWidth / 2, (int) carY - frameWidth / 2, frameWidth, frameWidth);
+    }
+
+    public boolean collides(Car car) {
+        double distanceX = Math.abs(getCarX() - car.getCarX());
+        double distanceY = Math.abs(getCarY() - car.getCarY());
+        double distance = Math.sqrt(Math.pow(distanceX, 2)+Math.pow(distanceY, 2));
+        if (distance > 80)
+            return false;
+        Area area1 = new Area(carRec);
+        Area area2 = new Area(car.getCarRec());
+        area1.transform(at);
+        area2.transform(car.getAt());
+        area1.intersect(area2);
+        return !area1.isEmpty();
+    }
+
+    public boolean collidesWithAny(Car[] cars) {
+        for (Car car : cars) {
+            if (collides(car) && this != car)
+                return true;
+        }
+        return false;
     }
 
     public void setRandomColor() {

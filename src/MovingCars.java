@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Random;
@@ -25,9 +26,7 @@ public class MovingCars extends JPanel implements ActionListener {
         cars = new Car[amountOfCars];
         for (int i = 0; i < cars.length; i++) {
             cars[i] = new Car();
-            cars[i].setOpaque(false);
             cars[i].setRandomColor();
-            add(cars[i]);
         }
         spawnCarsAtDefaultPositions();
 
@@ -35,6 +34,14 @@ public class MovingCars extends JPanel implements ActionListener {
         timer.setInitialDelay(0);
         timer.addActionListener(this);
 
+
+    }
+
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        for (Car car: cars) {
+            car.draw(g);
+        }
     }
 
     public void setGui(GUI gui) {
@@ -50,7 +57,6 @@ public class MovingCars extends JPanel implements ActionListener {
 
             // The purpose of this loop is to perform the following code for every car
             for (Car car : cars) {
-
                 car.moveAhead();
 
                 // This block of code makes the car slow down when it reaches a certain distance from another car
@@ -111,8 +117,27 @@ public class MovingCars extends JPanel implements ActionListener {
                     if (rd.nextInt(3) == 0)
                         car.setGoingToTurn(true);
                 }
+
+                if (car.collidesWithAny(cars))
+                    timer.stop();
             }
+
+            if (accident) {
+                cars[accidentCarNumber].rotateBy(-0.03);
+            }
+
+
+            repaint();
+
         } // end of timer
+
+        if (z == gui.getAccidentButton()) {
+            gui.getAccidentButton().setEnabled(false);
+            do {
+                accidentCarNumber = rd.nextInt(cars.length);
+            } while (!cars[accidentCarNumber].isOnMap(map) || !cars[accidentCarNumber].hasGreenLight(trafficLights));
+            accident = true;
+        }
 
         if (z == gui.getRestartButton()) {
             restart();
@@ -135,18 +160,16 @@ public class MovingCars extends JPanel implements ActionListener {
      * This method removes current cars and creates new ones
      */
     public void restart() {
-        for (int i = 0; i < cars.length; i++) {
-            cars[i].setVisible(false);
-        }
         cars = new Car[amountOfCars];
         for (int i = 0; i < cars.length; i++) {
             cars[i] = new Car();
             cars[i].setRandomColor();
-            cars[i].setOpaque(false);
-            add(cars[i]);
         }
         spawnCarsAtDefaultPositions();
+        repaint();
         timer.restart();
+        accident = false;
+        gui.getAccidentButton().setEnabled(true);
     }
 
     /**
