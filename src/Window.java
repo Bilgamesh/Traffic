@@ -1,10 +1,10 @@
 import javax.swing.*;
 
 public class Window extends JFrame {
-    GUI gui;
-    Map map;
-    MovingCars cars;
-    TrafficLightsOnMap trafficLights;
+    private final GUI gui;
+    private final Map map;
+    private final MovingCars cars;
+    private final TrafficLightsOnMap trafficLights;
 
     public Window() {
 

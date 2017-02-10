@@ -8,10 +8,14 @@ import java.io.IOException;
 import java.util.Random;
 
 public class Car extends JPanel {
-    private int width, height, frameWidth, respawnX, respawnY, respawnAngle, turnLine;
+    private final int width, height, frameWidth;
+    private final Random rd;
+    private final AffineTransform at;
+    private final Rectangle carRec;
+    private final BufferedImage carOutline;
+    private int respawnX, respawnY, respawnAngle, turnLine;
     private double angle, carX, carY, speed;
     private Color carColor;
-    private Random rd;
     private boolean isGoingToTurn;
 
     public Car() {
@@ -24,34 +28,39 @@ public class Car extends JPanel {
         speed = 0.3;
         rd = new Random();
         setCarPosition(0, 0, 0);
+        carOutline = LoadImage("src//car.png");
+        carRec = new Rectangle((frameWidth / 2), ((frameWidth / 2) - (height / 2)), width, height);
+        at = new AffineTransform();
     }
 
     public void paintComponent(Graphics g) {
-        super.paintComponent(g);
+        //super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        AffineTransform rotation = new AffineTransform();
-        rotation.setToTranslation(frameWidth / 2, frameWidth / 2);
-        rotation.rotate(Math.toRadians(angle));
-        g2d.transform(rotation);
-        Rectangle carRec = new Rectangle(0, -height / 2, width, height);
-        BufferedImage carImage = LoadImage("src//car.png");
         g2d.setColor(carColor);
+        at.setToRotation(Math.toRadians(angle), (frameWidth / 2), (frameWidth / 2));
+        g2d.transform(at);
         g2d.fill(carRec);
-        g2d.drawImage(carImage, 0, -height / 2, null);
+        g2d.drawImage(carOutline, (frameWidth / 2), ((frameWidth / 2) - (height / 2)), null);
+        g2d.dispose();
     }
 
     BufferedImage LoadImage(String FileName) {
         BufferedImage img = null;
-
         try {
             img = ImageIO.read(new File(FileName));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
         return img;
+    }
 
+    public Rectangle getCarRec() {
+        return carRec;
+    }
+
+    public AffineTransform getAffineTransform() {
+        return at;
     }
 
     public double getSpeed() {
@@ -86,12 +95,12 @@ public class Car extends JPanel {
 
     // Returns the 'X' coordinate of the car rectangle (not of the frame).
     public int getCarX() {
-        return getX() + frameWidth / 2;
+        return (int) getX() + frameWidth / 2;
     }
 
     // Returns the 'Y' coordinate of the car rectangle (not of the frame).
     public int getCarY() {
-        return getY() + frameWidth / 2;
+        return (int) getY() + frameWidth / 2;
     }
 
     // This method returns the Y coordinate of the car's front edge
@@ -170,6 +179,11 @@ public class Car extends JPanel {
                 || (angle == 180 && getCarX() < 0) || (angle == 270 && getCarY() < 0);
     }
 
+    /* This method returns true if the car is inside of the visible map */
+    public boolean isOnMap(Map map) {
+        return (getCarFrontX() > 0 && getCarFront() < map.getWidth() && getCarFrontY() > 0 && getCarFrontY() < map.getHeight());
+    }
+
     // This method returns true if the distance between the front side of this car and the rear side of the parameter-car is less than a specified value.
     public boolean isNearCarAtDistance(Car car, int distance) {
         return ((Math.abs(getCarFront() - car.getCarFront()) - getCarWidth()) < distance);
@@ -189,8 +203,8 @@ public class Car extends JPanel {
     // This method returns true if the car's angle is different than any of the standard right angles,
     // which means the car is not going straight in it's line but is now turning
     public boolean isNowTurning() {
-        return ((Math.abs(respawnAngle - angle) != 0) && Math.abs(respawnAngle - angle) != 90
-                && Math.abs(respawnAngle - angle) != 180 && Math.abs(respawnAngle - angle) != 270 && Math.abs(respawnAngle - angle) != 360);
+        return (angle != 0 && angle != 90
+                && angle != 180 && angle != 270 && angle != 360);
     }
 
     // This method returns true if the difference between this car's angle and parameter-car's angle is less than 45 degree

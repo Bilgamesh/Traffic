@@ -3,8 +3,8 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 
 public class TrafficLight extends JPanel {
-    private Color color;
     private int width, height, angle;
+    private Color color;
 
     public TrafficLight() {
         color = Color.RED;

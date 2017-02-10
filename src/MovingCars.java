@@ -4,14 +4,15 @@ import java.awt.event.ActionListener;
 import java.util.Random;
 
 public class MovingCars extends JPanel implements ActionListener {
-    private int amountOfCars, pointOfStop;
+    private final Timer timer;
+    private final Map map;
+    private int amountOfCars, accidentCarNumber;
     private Car[] cars;
-    private Timer timer;
-    private double passRedLightSpeed;
-    private Random rd;
-    private TrafficLightsOnMap trafficLights;
-    private Map map;
+    private final double passRedLightSpeed;
+    private final Random rd;
+    private final TrafficLightsOnMap trafficLights;
     private GUI gui;
+    private boolean accident;
 
     public MovingCars(int amountOfCars, Map map, TrafficLightsOnMap trafficLights) {
         this.amountOfCars = amountOfCars;
@@ -20,7 +21,6 @@ public class MovingCars extends JPanel implements ActionListener {
 
         passRedLightSpeed = 1.6;
         rd = new Random();
-        this.trafficLights = trafficLights;
 
         cars = new Car[amountOfCars];
         for (int i = 0; i < cars.length; i++) {
@@ -34,7 +34,7 @@ public class MovingCars extends JPanel implements ActionListener {
         timer = new Timer(10, this);
         timer.setInitialDelay(0);
         timer.addActionListener(this);
-        timer.start();
+
     }
 
     public void setGui(GUI gui) {
@@ -112,10 +112,18 @@ public class MovingCars extends JPanel implements ActionListener {
                         car.setGoingToTurn(true);
                 }
             }
-        }// end of timer
+        } // end of timer
 
         if (z == gui.getRestartButton()) {
             restart();
+        }
+
+        if (z == gui.getStartButton()) {
+            timer.start();
+        }
+
+        if (z == gui.getBackToMenuButton()) {
+            timer.stop();
         }
     }
 
@@ -123,7 +131,9 @@ public class MovingCars extends JPanel implements ActionListener {
         this.amountOfCars = newAmountOfCars;
     }
 
-    // This method removes current cars and creates new ones
+    /**
+     * This method removes current cars and creates new ones
+     */
     public void restart() {
         for (int i = 0; i < cars.length; i++) {
             cars[i].setVisible(false);
@@ -139,7 +149,9 @@ public class MovingCars extends JPanel implements ActionListener {
         timer.restart();
     }
 
-    // In this method cars are divided into four groups. Each group gets it's own line on the road, thus each group has it's own coordinates
+    /**
+     * In this method cars are divided into four groups. Each group gets it's own line on the road, thus each group has it's own coordinates
+     */
     public void spawnCarsAtDefaultPositions() {
 
         // vertical left line

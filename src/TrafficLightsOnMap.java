@@ -4,13 +4,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class TrafficLightsOnMap extends JPanel implements ActionListener {
-    private TrafficLight[] trafficLightObject;
-    private long backupTime;
-    private Timer timer;
+    private final Timer timer;
+    private final TrafficLight[] trafficLightObject;
+    private long backupTime, pauseTime;
     private boolean YTurningGreen, XTurningGreen;
     private GUI gui;
 
     public TrafficLightsOnMap(Map map) {
+        backupTime = 0;
 
         trafficLightObject = new TrafficLight[4];
         for (int i = 0; i < 4; i++) {
@@ -37,7 +38,7 @@ public class TrafficLightsOnMap extends JPanel implements ActionListener {
         // bottom traffic light
         trafficLightObject[3].setBounds(map.getRightCrossLine() - 10, map.getBottomCrossLine(), 20, 20);
 
-        timer = new Timer(500, this);
+        timer = new Timer(10, this);
         timer.setInitialDelay(0);
 
     }
@@ -92,6 +93,26 @@ public class TrafficLightsOnMap extends JPanel implements ActionListener {
         return trafficLightObject[2].getColor() == Color.GREEN;
     }
 
+    // This method returns true if the traffic lights on the Y axis are red
+    public boolean isRedY() {
+        return trafficLightObject[2].getColor() == Color.RED;
+    }
+
+    // This method returns true if the traffic lights on the Y axis are yellow
+    public boolean isYellowY() {
+        return trafficLightObject[2].getColor() == Color.YELLOW;
+    }
+
+    // This method returns true if the traffic lights on the X axis are red
+    public boolean isRedX() {
+        return trafficLightObject[0].getColor() == Color.RED;
+    }
+
+    // This method returns true if the traffic lights on the X axis are yellow
+    public boolean isYellowX() {
+        return trafficLightObject[0].getColor() == Color.YELLOW;
+    }
+
     public void restart() {
         gui.setSwitchLightButtonEnabled(true);
         timer.restart();
@@ -115,12 +136,23 @@ public class TrafficLightsOnMap extends JPanel implements ActionListener {
 
         if (z == gui.getSwitchLightButton()) {
             gui.setSwitchLightButtonEnabled(false);
-            backupTime = System.currentTimeMillis();
             timer.start();
+            backupTime = System.currentTimeMillis();
         }
 
         if (z == gui.getRestartButton()) {
             restart();
+            backupTime = 0;
+        }
+
+        if (z == gui.getBackToMenuButton() && timer.isRunning()) {
+            timer.stop();
+            pauseTime = System.currentTimeMillis();
+        }
+
+        if (z == gui.getStartButton() && backupTime != 0) {
+            timer.start();
+            backupTime = backupTime + System.currentTimeMillis() - pauseTime;
         }
 
         // After switchLightButton is pressed, the traffic lights are changed in 4 stages, there is 2 seconds delay between each stage.
@@ -137,25 +169,27 @@ public class TrafficLightsOnMap extends JPanel implements ActionListener {
                 setYellowY();
                 XTurningGreen = true;
             }
-            if (YTurningGreen && System.currentTimeMillis() - backupTime > 2000)
+            if (YTurningGreen && System.currentTimeMillis() - backupTime > 2000 && !isRedX())
                 setRedX();
-            if (YTurningGreen && System.currentTimeMillis() - backupTime > 4000)
+            if (YTurningGreen && System.currentTimeMillis() - backupTime > 4000 && isYellowY())
                 setYellowY();
             if (YTurningGreen && System.currentTimeMillis() - backupTime > 6000) {
                 setGreenY();
                 YTurningGreen = false;
                 gui.setSwitchLightButtonEnabled(true);
                 timer.stop();
+                backupTime = 0;
             }
-            if (XTurningGreen && System.currentTimeMillis() - backupTime > 2000)
+            if (XTurningGreen && System.currentTimeMillis() - backupTime > 2000 && !isRedY())
                 setRedY();
-            if (XTurningGreen && System.currentTimeMillis() - backupTime > 4000)
+            if (XTurningGreen && System.currentTimeMillis() - backupTime > 4000 && !isYellowX())
                 setYellowX();
             if (XTurningGreen && System.currentTimeMillis() - backupTime > 6000) {
                 setGreenX();
                 XTurningGreen = false;
                 gui.setSwitchLightButtonEnabled(true);
                 timer.stop();
+                backupTime = 0;
             }
         } // end of timer
     }

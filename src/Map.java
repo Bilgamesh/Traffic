@@ -1,9 +1,9 @@
 import javax.swing.*;
 
 public class Map extends JPanel {
-    private ImageIcon backgroundImage;
-    private JLabel backgroundLabel;
-    private int topCrossLine, bottomCrossLine, leftCrossLine, rightCrossLine;
+    private final int topCrossLine, bottomCrossLine, leftCrossLine, rightCrossLine;
+    private final ImageIcon backgroundImage;
+    private final JLabel backgroundLabel;
     private GUI gui;
 
     public Map() {
