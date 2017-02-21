@@ -1,3 +1,9 @@
+package sprites.car;
+
+import gui.steeringWheel.SteeringWheel;
+import map.Map;
+import sprites.trafficLight.TrafficLightModel;
+
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;

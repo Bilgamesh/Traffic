@@ -1,3 +1,9 @@
+package gamemodes;
+
+import gui.steeringWheel.SteeringWheel;
+import sprites.car.CarModel;
+import sprites.trafficLight.TrafficLightModel;
+
 import java.awt.*;
 import java.awt.event.MouseEvent;
 

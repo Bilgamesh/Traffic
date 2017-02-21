@@ -1,6 +1,6 @@
-import javax.swing.*;
+package sprites.trafficLight;
+
 import java.awt.*;
-import java.awt.geom.AffineTransform;
 
 public class TrafficLightSprite {
     private int width = 20;
@@ -10,8 +10,8 @@ public class TrafficLightSprite {
     private int x = 0;
     private int y = 0;
 
-    public void draw(Graphics g, TrafficLightModel trafficLightModel) {
-        updateVariables(trafficLightModel);
+    public void draw(Graphics g) {
+        //updateVariables(trafficLightModel);
         Graphics2D g2d = (Graphics2D) g;
         g2d.setColor(color);
         g2d.rotate(Math.toRadians(angle), x, y);

@@ -1,3 +1,9 @@
+package gamemodes;
+
+import gui.steeringWheel.SteeringWheel;
+import sprites.car.CarModel;
+import sprites.trafficLight.TrafficLightModel;
+
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.util.Random;
@@ -43,9 +49,9 @@ public class RescueMode implements GameMode {
         if (System.currentTimeMillis() - timeBackup > 4000) {
             timeBackup = System.currentTimeMillis();
             int a;
-             do {
-                 a = new Random().nextInt(24);
-             } while (carModels[a].isNowTurning() || !carModels[a].isOnMap() || !carModels[a].hasGreenLight());
+            do {
+                a = new Random().nextInt(24);
+            } while (carModels[a].isNowTurning() || !carModels[a].isOnMap() || !carModels[a].hasGreenLight());
             carModels[a].setShaking(true);
         }
     }

@@ -1,3 +1,5 @@
+package gui.steeringWheel;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -13,7 +15,7 @@ public class SteeringWheel extends JPanel implements ActionListener, MouseListen
 
     public SteeringWheel() {
         angle = 0;
-        steeringWheel = LoadImage("src//wheel.png");
+        steeringWheel = LoadImage("src//gui//steeringWheel//wheel.png");
         addMouseMotionListener(this);
         addMouseListener(this);
         timer = new Timer(10, this);

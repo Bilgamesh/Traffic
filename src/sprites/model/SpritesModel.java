@@ -1,60 +1,64 @@
+package sprites.model;
+
+import gamemodes.AutoMode;
+import gamemodes.GameMode;
+import gamemodes.RescueMode;
+import gui.steeringWheel.SteeringWheel;
+import map.Map;
+import sprites.car.CarModel;
+import sprites.car.CarSprite;
+import sprites.trafficLight.TrafficLightModel;
+import sprites.trafficLight.TrafficLightSprite;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 
-public class SpritesView extends JPanel {
-    private final Map map;
-    private TrafficLightSprite[] trafficLightSprites;
+public class SpritesModel extends JPanel {
+    private Map map;
     private TrafficLightModel[] trafficLightModels;
     private int amountOfCars;
     private CarModel[] carModels;
-    private CarSprite[] carSprites;
     private GameMode gameMode;
 
 
-    public SpritesView(Map map) {
+    public void initiateSpriteModels(Map map, int amountOfCars) {
         setSize(map.getSize());
         setOpaque(false);
         setLayout(null);
 
-        this.amountOfCars = 24;
+        this.amountOfCars = amountOfCars;
         this.map = map;
 
         declareNewTrafficLights();
-        declareNewCars(amountOfCars);
+        declareNewCars();
         spawnCarsAtDefaultPositions();
         spawnTrafficLightsAtDefaultPositions();
     }
 
-    private void declareNewCars(int amountOfCars) {
+    public void updateSpritesWithModels(CarSprite[] carSprites, TrafficLightSprite[] trafficLightSprites) {
+        for (int i = 0; i < amountOfCars; i++) {
+            carSprites[i].updateVariables(carModels[i]);
+        }
+        for (int i = 0; i < trafficLightSprites.length; i++) {
+            trafficLightSprites[i].updateVariables(trafficLightModels[i]);
+        }
+    }
+
+    private void declareNewCars() {
         carModels = new CarModel[amountOfCars];
-        carSprites = new CarSprite[amountOfCars];
         for (int i = 0; i < amountOfCars; i++) {
             carModels[i] = new CarModel();
             carModels[i].setRandomColor();
             carModels[i].setOtherCars(carModels);
             carModels[i].setMap(map);
-            carSprites[i] = new CarSprite();
         }
     }
 
     private void declareNewTrafficLights() {
         trafficLightModels = new TrafficLightModel[4];
-        trafficLightSprites = new TrafficLightSprite[4];
         for (int i = 0; i < 4; i++) {
             trafficLightModels[i] = new TrafficLightModel();
-            trafficLightSprites[i] = new TrafficLightSprite();
-        }
-    }
-
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        for (int i = 0; i < amountOfCars; i++) {
-            carSprites[i].updateVariables(carModels[i]);
-            carSprites[i].drawAll(g);
-        }
-        for (int i = 0; i < 4; i++) {
-            trafficLightSprites[i].draw(g, trafficLightModels[i]);
         }
     }
 

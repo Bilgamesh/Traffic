@@ -1,3 +1,5 @@
+package map;
+
 import sun.util.resources.cldr.en.TimeZoneNames_en_ZA;
 
 import javax.swing.*;
@@ -20,7 +22,7 @@ public class Map extends JPanel {
         rightCrossLine = 533;
         roadIntersection = new Rectangle(leftCrossLine, topCrossLine, rightCrossLine - leftCrossLine, bottomCrossLine - topCrossLine);
 
-        backgroundImage = new ImageIcon(("src//background.png"));
+        backgroundImage = new ImageIcon(("src//map//background.png"));
         backgroundLabel = new JLabel(backgroundImage);
         backgroundLabel.setBounds(0, 0, 800, 600);
         backgroundLabel.setLayout(null);

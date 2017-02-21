@@ -1,26 +1,40 @@
+package controller;
+
+
+import gui.view.GUIView;
+import map.Map;
+import sprites.model.SpritesModel;
+import sprites.view.SpritesView;
+
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 public class AppController implements ActionListener, MouseListener {
     private final GUIView guiView;
     private final Timer timer;
     private final SpritesView spritesView;
-    private int gameModeNumber = 0;
+    private final SpritesModel spritesModel;
 
-    public AppController(GUIView guiView, SpritesView spritesView) {
+    public AppController(Map map, GUIView guiView, SpritesView spritesView, SpritesModel spritesModel) {
         this.guiView = guiView;
         this.spritesView = spritesView;
+        this.spritesModel = spritesModel;
 
         timer = new Timer(10, this);
+
+        guiView.initiateGUI(map);
 
         guiView.addStartButtonListener(this);
         guiView.addBackToMenuButtonListener(this);
         guiView.addMouseListener(this);
 
-        spritesView.loadAutoMode();
+        int amountOfCars = 24;
+        spritesModel.initiateSpriteModels(map, amountOfCars);
+        spritesView.initiateSprites(map, amountOfCars);
+        spritesModel.loadAutoMode();
 
         timer.start();
 
@@ -30,11 +44,11 @@ public class AppController implements ActionListener, MouseListener {
         Object z = e.getSource();
         if (z == guiView.getStartButton()) {
             if (guiView.isAutoModeSelected()) {
-                spritesView.loadAutoMode();
+                spritesModel.loadAutoMode();
             }
             if (guiView.isRescueModeSelected()) {
                 timer.setDelay(15);
-                spritesView.loadRescueMode();
+                spritesModel.loadRescueMode();
                 guiView.setSteeringWheelVisible(true);
             }
 
@@ -42,12 +56,13 @@ public class AppController implements ActionListener, MouseListener {
         }
         if (z == guiView.getBackToMenuButton()) {
             timer.setDelay(10);
-            spritesView.loadAutoMode();
+            spritesModel.loadAutoMode();
             guiView.setGameplayGUI(false);
             guiView.setSteeringWheelVisible(false);
         }
         if (z == timer) {
-            spritesView.advance();
+            spritesModel.advance();
+            spritesModel.updateSpritesWithModels(spritesView.getCarSprites(), spritesView.getTrafficLightSprites());
             spritesView.repaint();
         }
     }
@@ -55,7 +70,7 @@ public class AppController implements ActionListener, MouseListener {
     public void mouseClicked(MouseEvent e) {
         Object z = e.getSource();
         if (z == guiView && guiView.isRescueModeSelected()) {
-            spritesView.pickClickedCar(e, guiView.getSteeringWheel());
+            spritesModel.pickClickedCar(e, guiView.getSteeringWheel());
         }
     }
 

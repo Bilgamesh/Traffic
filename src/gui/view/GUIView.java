@@ -1,15 +1,20 @@
+package gui.view;
+
+import gui.steeringWheel.SteeringWheel;
+import map.Map;
+
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseMotionListener;
 
 public class GUIView extends JPanel {
-    private final JButton backToMenuButton, startButton;
-    private final SteeringWheel steeringWheel;
-    private final JRadioButton autoMode, rescueMode;
-    private final ButtonGroup gameModeGroup;
-    private final JPanel gameModeButtons;
+    private JButton backToMenuButton, startButton;
+    private SteeringWheel steeringWheel;
+    private JRadioButton autoMode, rescueMode;
+    private ButtonGroup gameModeGroup;
+    private JPanel gameModeButtons;
 
-    public GUIView(Map map) {
+    public void initiateGUI(Map map) {
         setSize(map.getSize());
         setLayout(null);
         setOpaque(false);

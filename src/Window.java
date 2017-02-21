@@ -1,3 +1,9 @@
+import controller.AppController;
+import gui.view.GUIView;
+import map.Map;
+import sprites.model.SpritesModel;
+import sprites.view.SpritesView;
+
 import javax.swing.*;
 
 public class Window extends JFrame {
@@ -9,9 +15,10 @@ public class Window extends JFrame {
 
         Map map = new Map();
 
-        GUIView guiView = new GUIView(map);
-        SpritesView spritesView = new SpritesView(map);
-        AppController appController = new AppController(guiView, spritesView);
+        GUIView guiView = new GUIView();
+        SpritesView spritesView = new SpritesView();
+        SpritesModel spritesModel = new SpritesModel();
+        AppController appController = new AppController(map, guiView, spritesView, spritesModel);
 
         add(guiView);
         add(spritesView);

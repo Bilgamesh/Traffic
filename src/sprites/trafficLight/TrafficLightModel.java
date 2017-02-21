@@ -1,3 +1,5 @@
+package sprites.trafficLight;
+
 import java.awt.*;
 
 public class TrafficLightModel {

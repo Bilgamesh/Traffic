@@ -1,3 +1,5 @@
+package sprites.car;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -5,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class CarSprite {
-    private final Image carOutline = LoadImage("src//car.png");
+    private final Image carOutline = LoadImage("src//sprites//car//car.png");
     private Color carColor = Color.WHITE;
     private Double angle = 0.0;
     private int x = 0;
